@@ -1,0 +1,33 @@
+<flags CXXFLAGS="-g -O0"/>
+<use name="FWCore/Framework"/>
+<use name="FWCore/ParameterSet"/>
+<use name="DataFormats/PPSObjects"/>
+<use name="DataFormats/Candidate"/>
+<use name="DataFormats/TrackReco"/>
+<use name="DataFormats/VertexReco"/>
+<use name="DataFormats/JetReco"/>
+<use name="DataFormats/PatCandidates"/>
+<use name="DataFormats/Luminosity"/>
+<use name="DataFormats/Math"/>
+<use name="JetMETCorrections/Objects"/>
+<use name="CondFormats/JetMETObjects"/>
+<use name="PhysicsTools/PatAlgos"/>
+<use name="PhysicsTools/PatUtils"/>
+<use name="PhysicsTools/CandUtils"/>
+<use name="PhysicsTools/UtilAlgos"/>
+<use name="RecoLuminosity/LumiProducer"/>
+<use name="HLTrigger/HLTcore"/>
+<use name="L1Trigger/GlobalTriggerAnalyzer"/>
+<use name="DataFormats/GsfTrackReco"/>
+<use name="DataFormats/EgammaCandidates"/>
+<use name="DataFormats/MuonReco"/>
+<use name="RecoMuon/TrackingTools"/>
+<use name="CalibFormats/HcalObjects"/>
+<use name="root"/>
+<export>
+  <lib name="1"/>
+</export>
+
+
+
+
