@@ -113,7 +113,7 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 	h_RJJ   = fs->make<TH1F>( "RJJ" , "Dijets Mass" , 100, 0., 2.0 );
 	h_MxFromJets =  fs->make<TH1F>( "MxFromJets" , "MxFromJets" , 100, 0., 20. );
 	h_MxFromPFCands =  fs->make<TH1F>( "MxFromPFCands" , "MxFromPFCands" , 100, 0., 20. );
-        PPS_xiARMPlus =  fs->make<TH1F>( "PPS_xiARMPlus" , "PPS_xiARMPlus" , 100, -2.0, 2.0 ); 		
+	PPS_xiARMPlus =  fs->make<TH1F>( "PPS_xiARMPlus" , "PPS_xiARMPlus" , 100, -2.0, 2.0 ); 		
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,10 +128,7 @@ ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
 void ExclusiveDijetsAnalysisUsingPPS::beginJob()
 {
 
-	//	edm::Service<TFileService> fs;
-	//	std::ostringstream oss;
-	//	TFileDirectory Dir = fs->mkdir("Info");
-
+	
 
 }
 
@@ -162,6 +159,7 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
 // 	iEvent.getByLabel("ppssim","PPSReco",ppsCollectionH);
 	iEvent.getByLabel("ppssim",ppsTag_,ppsCollectionH);
          PPS_xiARMPlus->Fill(ppsCollectionH->ArmF.t[0]);
+	//cout << " \t Nvtx = " << ppsCollectionH->Nvtx << endl;
 
 
 	if(jetCollectionH->size() > 1){
