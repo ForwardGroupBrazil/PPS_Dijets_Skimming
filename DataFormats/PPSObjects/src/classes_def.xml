@@ -1,0 +1,6 @@
+<lcgdict>
+   <class name="PPSData"/>
+   <class name="PPSDetector"/>
+   <class name="PPSSpectrometer"/>
+   <class name="edm::Wrapper<PPSSpectrometer>"/>
+</lcgdict>
