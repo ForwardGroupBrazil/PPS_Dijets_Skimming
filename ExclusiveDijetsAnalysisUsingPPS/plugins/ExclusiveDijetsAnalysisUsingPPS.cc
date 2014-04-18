@@ -2,21 +2,10 @@
 //
 // Package:    ExclusiveDijetsAnalysisUsingPPS
 // Class:      ExclusiveDijetsAnalysisUsingPPS
-// 
-/**\class ExclusiveDijetsAnalysisUsingPPS ExclusiveDijetsAnalysisUsingPPS.cc PPS_Dijets_Skimming/ExclusiveDijetsAnalysisUsingPPS/plugins/ExclusiveDijetsAnalysisUsingPPS.cc
-
-Description: [one line class summary]
-
-Implementation:
-[Notes on implementation]
- */
 //
-// Original Author:  Sandro Fonseca De Souza
-//         Created:  Sun, 13 Apr 2014 01:53:33 GMT
-// $Id$
+// Authors: PPS CEP Brazilian Group
 //
 //
-
 
 // system include files
 #include <memory>
@@ -24,12 +13,11 @@ Implementation:
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+// dataformats
 #include "DataFormats/JetReco/interface/Jet.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
@@ -39,22 +27,17 @@ Implementation:
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-
-//#include "ForwardAnalysis/Utilities/interface/LargestGenRapidityGap.h"
-//#include "ForwardAnalysis/Utilities/interface/CastorEnergy.h"
-//#include "ForwardAnalysis/ForwardTTreeAnalysis/interface/ExclusiveDijetsEvent.h"
-//#include "ForwardAnalysis/ForwardTTreeAnalysis/interface/FWLiteTools.h"
-
-
-
-
-//PPS
 #include "DataFormats/PPSObjects/interface/PPSSpectrometer.h"
+#include "DataFormats/PPSObjects/interface/PPSData.h"
+#include "DataFormats/PPSObjects/interface/PPSDetector.h"
+#include "DataFormats/PPSObjects/interface/PPSToF.h"
 
-
+// root
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TMath.h"
 
+// c++
 #include <cmath>
 #include <vector>
 #include <string>
@@ -63,73 +46,63 @@ Implementation:
 #include <iostream>
 #include <map>
 
+using namespace edm;
+using namespace std;
 
 //
 // class declaration
 //
 
 class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
-	public:
-		explicit ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet&);
-		~ExclusiveDijetsAnalysisUsingPPS();
+  public:
+    explicit ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet&);
+    ~ExclusiveDijetsAnalysisUsingPPS();
 
 
-	private:
-		virtual void beginJob() override;
-		virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
-		virtual void endJob() override;
+  private:
+    virtual void beginJob() override;
+    virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+    virtual void endJob() override;
 
 
-		// ----------member data ---------------------------
+    // ----------member data ---------------------------
 
+    void FillCollections(const edm::Event&, const edm::EventSetup&, bool debug);
+    void SortingObjects(const edm::Event&, const edm::EventSetup&, bool debug);
 
-		edm::InputTag jetTag_;
-		edm::InputTag particleFlowTag_;
-		 std::string ppsTag_;
-		//edm::InputTag ppsTag_;
-		TH1F * h_pt_jet1, * h_eta_jet1, * h_phi_jet1,*h_dijetMass, *h_RJJ,*h_MassJets,* h_MxFromJets,* h_MxFromPFCands ;
-		TH1F * h_pt_jet2, * h_eta_jet2, * h_phi_jet2,*PPS_xiARMPlus;	
+    edm::InputTag jetTag_;
+    edm::InputTag particleFlowTag_;
+    std::string ppsTag_;
+
+    std::vector<const reco::Jet*> JetsVector;
+    std::vector<const reco::Vertex*> VertexVector;
+    std::vector<const PPSSpectrometer*> PPSSpecVector;
 
 };
 
-////////////////////////////////////////////////////////////////////////
+//
 // constructors and destructor
 //
+
 ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet& iConfig):
-	jetTag_(iConfig.getParameter<edm::InputTag>("JetTag")),
-	particleFlowTag_(iConfig.getParameter<edm::InputTag>("ParticleFlowTag")),
-//	ppsTag_(iConfig.getParameter<edm::InputTag>("PPSTag"))
- 	ppsTag_(iConfig.getUntrackedParameter<std::string>("PPSTag","PPSReco"))
+  jetTag_(iConfig.getParameter<edm::InputTag>("JetTag")),
+  particleFlowTag_(iConfig.getParameter<edm::InputTag>("ParticleFlowTag")),
+  ppsTag_(iConfig.getUntrackedParameter<std::string>("PPSTag","PPSReco"))
 {
-	edm::Service<TFileService> fs;
-	h_pt_jet1    = fs->make<TH1F>( "jet1_pt"  , "p_{t}", 100,  0., 300. );
-	h_eta_jet1   = fs->make<TH1F>( "jet1_eta" , "#eta" , 50, -3, 3 );
-	h_phi_jet1   = fs->make<TH1F>( "jet1_phi" , "#phi" , 50, -M_PI, M_PI );
-	h_pt_jet2    = fs->make<TH1F>( "jet2_pt"  , "p_{t}", 100,  0., 300. );
-	h_eta_jet2   = fs->make<TH1F>( "jet2_eta" , "#eta" , 50, -3, 3 );
-	h_phi_jet2   = fs->make<TH1F>( "jet2_phi" , "#phi" , 50, -M_PI, M_PI );
-	h_MassJets   = fs->make<TH1F>( "JetsMass" , "jets Mass" , 100, 0., 1000. );
-	h_dijetMass   = fs->make<TH1F>( "diJetsMass" , "Dijets Mass" , 100, 0., 1000. );
-	h_RJJ   = fs->make<TH1F>( "RJJ" , "Dijets Mass" , 100, 0., 2.0 );
-	h_MxFromJets =  fs->make<TH1F>( "MxFromJets" , "MxFromJets" , 100, 0., 20. );
-	h_MxFromPFCands =  fs->make<TH1F>( "MxFromPFCands" , "MxFromPFCands" , 100, 0., 20. );
-	PPS_xiARMPlus =  fs->make<TH1F>( "PPS_xiARMPlus" , "PPS_xiARMPlus" , 100, -2.0, 2.0 ); 		
+
+  edm::Service<TFileService> fs;
+
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
 ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
 {
 
 }
 
 
-
 // ------------ method called once each job just before starting event loop  ------------
 void ExclusiveDijetsAnalysisUsingPPS::beginJob()
 {
-
-	
-
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -137,86 +110,168 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
 {
 }
 
-
-
-
 // ------------ method called for each event  ------------
-void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  FillCollections(iEvent, iSetup, true); //true-> Print Ordered Outputs, False-> No print screen. Debugger. There is a deep debugger inside the function. 
+  SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen. Debugger.
+
+}
+
+
+// ------------ Fill Vectors, All Handles  ------------
+void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
 {
-	using namespace edm;
-	using namespace std;
+
+  // Debug Detailed Information, each loop
+  bool debugdetails = false;
+
+  // Fill Vertex
+  Handle<edm::View<reco::Vertex> > vertex;
+  iEvent.getByLabel("offlinePrimaryVertices", vertex);
+
+  int vertexsize = vertex->size();
+  int itVertex;
+  VertexVector.clear();
+
+  if(vertex->size()>0){
+    for(itVertex=0; itVertex < vertexsize; ++itVertex){
+      const reco::Vertex* vertexAll = &((*vertex)[itVertex]);
+      VertexVector.push_back(vertexAll);
+    }
+  }
 
 
-	Handle<edm::View<reco::Jet> > jetCollectionH;
-	iEvent.getByLabel(jetTag_,jetCollectionH);
+  // Fill Jets
+  Handle<edm::View<reco::Jet> > jets;
+  iEvent.getByLabel(jetTag_,jets);
 
-	Handle<edm::View<reco::PFCandidate> > particleFlowCollectionH;
-	iEvent.getByLabel(particleFlowTag_,particleFlowCollectionH);
+  int jetsize = jets->size();
+  int itJets;
+  JetsVector.clear();
 
-//	Handle<edm::View<PPSSpectrometer> > ppsCollectionH;
-//	iEvent.getByLabel(ppsTag_,ppsCollectionH);		
-       	Handle<PPSSpectrometer> ppsCollectionH;
-// 	iEvent.getByLabel("ppssim","PPSReco",ppsCollectionH);
-	iEvent.getByLabel("ppssim",ppsTag_,ppsCollectionH);
-         PPS_xiARMPlus->Fill(ppsCollectionH->ArmF.t[0]);
-	//cout << " \t Nvtx = " << ppsCollectionH->Nvtx << endl;
+  if(jets->size()>0){
+    for(itJets=0; itJets < jetsize; ++itJets){
+      const reco::Jet* jetAll = &((*jets)[itJets]);
+      JetsVector.push_back(jetAll);
+    }
+  }
 
+  // Fill PPS Spectrometer
+  Handle<PPSSpectrometer> ppsSpectrum;
+  iEvent.getByLabel("ppssim",ppsTag_,ppsSpectrum);
 
-	if(jetCollectionH->size() > 1){
-		const reco::Jet& jet1 = (*jetCollectionH)[0];// they come out ordered right?
-		const reco::Jet& jet2 = (*jetCollectionH)[1];
+  if (debug){
+    cout << "\n--PPS INFO--" << endl;
+    if (ppsSpectrum->vtxZ.size() > 0) cout << "vtxZ[0]: " << ppsSpectrum->vtxZ[0] << " | Vector Size: " << ppsSpectrum->vtxZ.size() << endl;
+    if (ppsSpectrum->ArmF.t.size() > 0) cout << "ArmF.t[0]: " << ppsSpectrum->ArmF.t[0] << " | Vector Size: " << ppsSpectrum->ArmF.t.size() << endl;
+    if (ppsSpectrum->ArmB.t.size() > 0) cout << "ArmB.t[0]: " << ppsSpectrum->ArmB.t[0] << " | Vector Size: " << ppsSpectrum->ArmB.t.size() << endl;  
+    if (ppsSpectrum->ArmF.TrkDet1.X.size() > 0) cout << "ArmF.TrkDet1[0](x,y): (" << ppsSpectrum->ArmF.TrkDet1.X[0] << "," << ppsSpectrum->ArmF.TrkDet1.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmF.TrkDet1.X.size() <<  endl;
+    if (ppsSpectrum->ArmB.TrkDet1.X.size() > 0) cout << "ArmB.TrkDet1[0](x,y): (" << ppsSpectrum->ArmB.TrkDet1.X[0] << "," << ppsSpectrum->ArmB.TrkDet1.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmB.TrkDet1.X.size() << endl;
+    if (ppsSpectrum->ArmF.TrkDet2.X.size() > 0) cout << "ArmF.TrkDet2[0](x,y): (" << ppsSpectrum->ArmF.TrkDet2.X[0] << "," << ppsSpectrum->ArmF.TrkDet2.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmF.TrkDet2.X.size() << endl;
+    if (ppsSpectrum->ArmB.TrkDet2.X.size() > 0) cout << "ArmB.TrkDet2[0](x,y): (" << ppsSpectrum->ArmB.TrkDet2.X[0] << "," << ppsSpectrum->ArmB.TrkDet2.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmB.TrkDet2.X.size() << endl;
+    if (ppsSpectrum->ArmF.ToFDet.X.size() > 0) cout << "ArmF.ToFDet[0](x,y): (" << ppsSpectrum->ArmF.ToFDet.X[0] << "," << ppsSpectrum->ArmF.ToFDet.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmF.ToFDet.X.size() << endl;
+    if (ppsSpectrum->ArmB.ToFDet.X.size() > 0) cout << "ArmB.ToFDet[0](x,y): (" << ppsSpectrum->ArmB.ToFDet.X[0] << "," << ppsSpectrum->ArmB.ToFDet.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmB.ToFDet.X.size() << endl;
 
-		h_pt_jet1->Fill(jet1.pt()) ;
-		h_eta_jet1->Fill(jet1.eta() );
-		h_phi_jet1->Fill(jet1.phi() );	
+    if(debugdetails){ 
 
-		h_pt_jet2->Fill(jet2.pt()) ;
-		h_eta_jet2->Fill(jet2.eta() );
-		h_phi_jet2->Fill(jet2.phi() );
+      cout << "ArmF.TrkDet1: " << ppsSpectrum->ArmF.TrkDet1.X.size() << endl;
+      cout << "ArmB.TrkDet1: " << ppsSpectrum->ArmB.TrkDet1.X.size() << endl;
+      cout << "ArmF.TrkDet2: " << ppsSpectrum->ArmF.TrkDet2.X.size() << endl;
+      cout << "ArmB.TrkDet2: " << ppsSpectrum->ArmB.TrkDet2.X.size() << endl;
+      cout << "ArmF.ToFDet: " << ppsSpectrum->ArmF.ToFDet.X.size() << endl;
+      cout << "ArmB.ToFDet: " << ppsSpectrum->ArmB.ToFDet.X.size() << endl;
 
-		//	cout<<" jet1.pt(): "<<jet1.pt()<<" jet1.eta(): "<< jet1.eta() <<" jet1.phi(): "<<jet1.phi()<<endl;
-		//	cout<<" jet2.pt(): "<<jet1.pt()<<" jet2.eta(): "<< jet2.eta() <<" jet2.phi(): "<<jet2.phi()<<endl;  
-
-		//Using Lorentz Vector	
-		math::XYZTLorentzVector jetSystem(0.,0.,0.,0.);
-		jetSystem += jet1.p4();
-		h_MassJets->Fill(jetSystem.M());
-		// Di-jet mass
-		math::XYZTLorentzVector dijetSystem(0.,0.,0.,0.);
-		dijetSystem += jet1.p4();
-		dijetSystem += jet2.p4();
-		h_dijetMass->Fill(dijetSystem.M());
-
-		// M_{X}
-		math::XYZTLorentzVector allJets(0.,0.,0.,0.);
-		for(edm::View<reco::Jet>::const_iterator jet = jetCollectionH->begin();
-				jet != jetCollectionH->end(); ++jet) allJets += jet->p4();
-
-
-		h_MxFromJets->Fill(allJets.M());
-
-		math::XYZTLorentzVector allPFCands(0.,0.,0.,0.);
-		for(edm::View<reco::PFCandidate>::const_iterator pfCand = particleFlowCollectionH->begin();
-				pfCand != particleFlowCollectionH->end();
-				++pfCand) allPFCands += pfCand->p4();
+      // Vertex PPS Info
+      for (unsigned int i=0;i<ppsSpectrum->vtxZ.size();i++){
+	cout << "\nPPS: vtxZ[" << i << "]: " << ppsSpectrum->vtxZ[i] << " mm" << endl;
+      }
 
 
-		h_MxFromPFCands->Fill(allPFCands.M());
+      // ARM-F
+      for (unsigned int i=0;i<ppsSpectrum->ArmF.t.size();i++){
+	cout << "ArmF: t[" << i << "]: " << ppsSpectrum->ArmF.t[i] << " mm" << endl;
+      }
+
+      for (unsigned int i=0;i<ppsSpectrum->ArmF.TrkDet1.X.size();i++){
+	cout << "ArmF, TrkDet1(x,y): (" << ppsSpectrum->ArmF.TrkDet1.X[i] << "," << ppsSpectrum->ArmF.TrkDet1.Y[i] << ") mm" << endl;
+      }
+
+      for (unsigned int i=0;i<ppsSpectrum->ArmF.TrkDet2.X.size();i++){
+	cout << "ArmF, TrkDet2(x,y): (" << ppsSpectrum->ArmF.TrkDet2.X[i] << "," << ppsSpectrum->ArmF.TrkDet2.Y[i] << ") mm" << endl;
+      }
+
+      for (unsigned int i=0;i<ppsSpectrum->ArmF.ToFDet.X.size();i++){
+	cout << "ArmF, ToFDet(x,y): (" << ppsSpectrum->ArmF.ToFDet.X[i] << "," << ppsSpectrum->ArmF.ToFDet.Y[i] << ") mm" << endl;
+      }
 
 
-		if(jetCollectionH->size() > 1){
-			//      double RjjFromJets = Rjj(*jetCollectionH,*jetCollectionH);
-			////h_RJJ->Fill(RjjFromJets);
-		}
-		///////////////////////////////////////////
+      // ARM-B
+      for (unsigned int i=0;i<ppsSpectrum->ArmB.t.size();i++){
+	cout << "ArmB: t[" << i << "]: " << ppsSpectrum->ArmB.t[i] << " mm" << endl;
+      }
+
+      for (unsigned int i=0;i<ppsSpectrum->ArmB.TrkDet1.X.size();i++){
+	cout << "ArmB, TrkDet1(x,y): (" << ppsSpectrum->ArmB.TrkDet1.X[i] << "," << ppsSpectrum->ArmB.TrkDet1.Y[i] << ") mm" << endl;
+      }
+
+      for (unsigned int i=0;i<ppsSpectrum->ArmB.TrkDet2.X.size();i++){
+	cout << "ArmB, TrkDet2(x,y): (" << ppsSpectrum->ArmB.TrkDet2.X[i] << "," << ppsSpectrum->ArmB.TrkDet2.Y[i] << ") mm" << endl;
+      }
+
+      for (unsigned int i=0;i<ppsSpectrum->ArmB.ToFDet.X.size();i++){
+	cout << "ArmB, ToFDet(x,y): (" << ppsSpectrum->ArmB.ToFDet.X[i] << "," << ppsSpectrum->ArmB.ToFDet.Y[i] << ") mm\n" << endl;
+      }
+
+    }
+
+    cout << "--END--\n\n" << endl;
+
+  }
 
 
+  Handle<PPSDetector> ppsDetector;
+  iEvent.getByLabel("ppssim",ppsTag_,ppsDetector);
 
-	}//Jets selection
+  Handle<PPSData> ppsData;
+  iEvent.getByLabel("ppssim",ppsTag_,ppsData);
 
 
-}//end analysis
-/////////////////////////////////////////////////////
+}
+
+// ------------ Sorting Vectors, Filled in FillCollections ------------
+void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
+
+  // Ordering Jets by pT
+  if(JetsVector.size()>0){
+
+    const int JetsVectorSize = (int) JetsVector.size();
+    int *sortJetsVector= new int[JetsVectorSize];
+    double *vjets = new double[JetsVectorSize];
+
+    for (int i=0; i<JetsVectorSize; i++) {
+      vjets[i] = JetsVector[i]->pt();
+    }
+
+    TMath::Sort(JetsVectorSize, vjets, sortJetsVector, true);
+
+    if (debug){
+      cout << "\n--BEGIN--" << endl;
+
+      for (unsigned int i=0;i<JetsVector.size();i++){
+	cout << "ORDERED reco::Jets[" << sortJetsVector[i] << "]\t---> pT [GeV]: " << JetsVector[sortJetsVector[i]]->pt() << " | eT [GeV]: " << JetsVector[sortJetsVector[i]]->et() << " | eta: " << JetsVector[sortJetsVector[i]]->eta() << " | phi: " << JetsVector[sortJetsVector[i]]->phi() << " | Vertex: " << JetsVector[sortJetsVector[i]]->vertex() << " mm" << endl;
+      }
+
+      // Vertex
+      for (unsigned int i=0;i<VertexVector.size();i++){
+	cout << "reco::Vertex[" << i << "]\t---> Position: " << VertexVector[i]->position() << " mm" << endl;
+      }
+
+      cout << "--END--\n\n" << endl;
+    }
+  }
+
+}
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExclusiveDijetsAnalysisUsingPPS);
