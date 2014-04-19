@@ -32,6 +32,10 @@
 #include "DataFormats/PPSObjects/interface/PPSDetector.h"
 #include "DataFormats/PPSObjects/interface/PPSToF.h"
 
+// Tracks Associated with Jets
+#include "DataFormats/JetReco/interface/JetTrackMatch.h"
+#include "DataFormats/Math/interface/Point3D.h"
+
 // root
 #include "TH1F.h"
 #include "TH2F.h"
@@ -73,10 +77,12 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     edm::InputTag jetTag_;
     edm::InputTag particleFlowTag_;
     std::string ppsTag_;
+    int indexGold;
 
     std::vector<const reco::Jet*> JetsVector;
     std::vector<const reco::Vertex*> VertexVector;
     std::vector<const PPSSpectrometer*> PPSSpecVector;
+    std::vector< std::pair<double,double> > PPSCMSVertex;
 
 };
 
@@ -113,7 +119,7 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
 // ------------ method called for each event  ------------
 void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
-  FillCollections(iEvent, iSetup, true); //true-> Print Ordered Outputs, False-> No print screen. Debugger. There is a deep debugger inside the function. 
+  FillCollections(iEvent, iSetup, true); //true-> Print Outputs and Golden Vertex (PPS and CMS). False-> No print screen. Debugger. There is a deep debugger inside the function. 
   SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen. Debugger.
 
 }
@@ -137,6 +143,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   if(vertex->size()>0){
     for(itVertex=0; itVertex < vertexsize; ++itVertex){
       const reco::Vertex* vertexAll = &((*vertex)[itVertex]);
+      if (vertexAll->isValid()==0) continue; 
       VertexVector.push_back(vertexAll);
     }
   }
@@ -166,6 +173,8 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
     if (ppsSpectrum->vtxZ.size() > 0) cout << "vtxZ[0]: " << ppsSpectrum->vtxZ[0] << " | Vector Size: " << ppsSpectrum->vtxZ.size() << endl;
     if (ppsSpectrum->ArmF.t.size() > 0) cout << "ArmF.t[0]: " << ppsSpectrum->ArmF.t[0] << " | Vector Size: " << ppsSpectrum->ArmF.t.size() << endl;
     if (ppsSpectrum->ArmB.t.size() > 0) cout << "ArmB.t[0]: " << ppsSpectrum->ArmB.t[0] << " | Vector Size: " << ppsSpectrum->ArmB.t.size() << endl;  
+    if (ppsSpectrum->ArmF.xi.size() > 0) cout << "ArmF.xi[0]: " << ppsSpectrum->ArmF.xi[0] << " | Vector Size: " << ppsSpectrum->ArmF.xi.size() << endl;
+    if (ppsSpectrum->ArmB.xi.size() > 0) cout << "ArmB.xi[0]: " << ppsSpectrum->ArmB.xi[0] << " | Vector Size: " << ppsSpectrum->ArmB.xi.size() << endl;
     if (ppsSpectrum->ArmF.TrkDet1.X.size() > 0) cout << "ArmF.TrkDet1[0](x,y): (" << ppsSpectrum->ArmF.TrkDet1.X[0] << "," << ppsSpectrum->ArmF.TrkDet1.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmF.TrkDet1.X.size() <<  endl;
     if (ppsSpectrum->ArmB.TrkDet1.X.size() > 0) cout << "ArmB.TrkDet1[0](x,y): (" << ppsSpectrum->ArmB.TrkDet1.X[0] << "," << ppsSpectrum->ArmB.TrkDet1.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmB.TrkDet1.X.size() << endl;
     if (ppsSpectrum->ArmF.TrkDet2.X.size() > 0) cout << "ArmF.TrkDet2[0](x,y): (" << ppsSpectrum->ArmF.TrkDet2.X[0] << "," << ppsSpectrum->ArmF.TrkDet2.Y[0] << ") mm" << " | Vector Size: " << ppsSpectrum->ArmF.TrkDet2.X.size() << endl;
@@ -225,16 +234,54 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
     }
 
-    cout << "--END--\n\n" << endl;
-
   }
-
 
   Handle<PPSDetector> ppsDetector;
   iEvent.getByLabel("ppssim",ppsTag_,ppsDetector);
 
   Handle<PPSData> ppsData;
   iEvent.getByLabel("ppssim",ppsTag_,ppsData);
+
+  //Handle<reco::JetTrackMatch<reco::Jet> > tracksWithJets;
+  //iEvent.getByType(tracksWithJets);
+
+  //
+  // Association of CMS Vertex and PPS Vertex Reconstructed by proton TOF (10 ps).
+  //
+  // Idea: The choosen Vertex_CMS_z will be find from the minimum | Vertex_PPS_z - Vertex_CMS_z |. 
+  //
+
+  for (unsigned int i=0;i<VertexVector.size();i++){
+    if (ppsSpectrum->vtxZ.size() > 0){ 
+      PPSCMSVertex.push_back(std::pair<double,double>(fabs(ppsSpectrum->vtxZ[0] - VertexVector[i]->z()), VertexVector[i]->z()));
+    }else{
+      PPSCMSVertex.clear();
+    }
+  }
+
+  // Sorting | Vertex_PPS_z - Vertex_CMS_z |
+  stable_sort(PPSCMSVertex.begin(), PPSCMSVertex.end());
+
+  if(PPSCMSVertex.size() > 0){
+    for (unsigned int i=0;i<PPSCMSVertex.size();i++){
+      if ((PPSCMSVertex[0].second == VertexVector[i]->z())){
+	indexGold = i;
+      }
+    }
+  }
+  else{
+    indexGold = -999;
+  }
+
+
+  if (debug){
+    // Selected Vertex CMS/PPS
+    if (indexGold != -999){
+      cout << "\n--GOLDEN VERTEX ASSOCIATION CMS/PPS--" << endl;
+      cout << "Position (x,y,z): " << VertexVector[indexGold]->position() << " mm" << endl;
+    }
+    cout << "--END--\n\n" << endl;
+  }
 
 
 }
@@ -269,9 +316,11 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
 
       cout << "--END--\n\n" << endl;
     }
+
   }
 
 }
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExclusiveDijetsAnalysisUsingPPS);
