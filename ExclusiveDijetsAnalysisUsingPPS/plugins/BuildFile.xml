@@ -23,6 +23,7 @@
 <use name="DataFormats/MuonReco"/>
 <use name="RecoMuon/TrackingTools"/>
 <use name="CalibFormats/HcalObjects"/>
+<use name="TrackingTools/IPTools"/>
 <use name="root"/>
 <export>
   <lib name="1"/>
