@@ -7,8 +7,13 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
+    duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
     fileNames = cms.untracked.vstring(
-          'file:/afs/cern.ch/work/p/polme/public/PPS/CMSSW_6_2_0/src/GG_newtest_1.root'
+          'file:/afs/cern.ch/work/p/polme/public/PPS/CMSSW_6_2_0/src/GG_newtest_1.root',
+          'file:/afs/cern.ch/work/p/polme/public/PPS/CMSSW_6_2_0/src/GG_newtest_2.root',
+          'file:/afs/cern.ch/work/p/polme/public/PPS/CMSSW_6_2_0/src/GG_newtest_3.root',
+          'file:/afs/cern.ch/work/p/polme/public/PPS/CMSSW_6_2_0/src/GG_newtest_4.root',
+          'file:/afs/cern.ch/work/p/polme/public/PPS/CMSSW_6_2_0/src/GG_newtest_5.root'
     )
 )
 
