@@ -35,7 +35,7 @@ process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
                                )
 
 process.TFileService = cms.Service("TFileService",
-                                       fileName = cms.string('histo_dijets.root')
+                                       fileName = cms.string('histo_CEPdijets.root')
                                    )
 
 process.p = cms.Path(process.ak5JetTracksAssociatorAtVertex*process.demo)
