@@ -120,6 +120,11 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     double xPPSArmBDet1, yPPSArmBDet1;
     double xPPSArmFDet2, yPPSArmFDet2;
     double xPPSArmBDet2, yPPSArmBDet2;
+    double xPPSArmFToF, yPPSArmFToF;
+    double xPPSArmBToF, yPPSArmBToF;
+    int stopPPSArmFTrkDet1, stopPPSArmFTrkDet2;
+    int stopPPSArmBTrkDet1, stopPPSArmBTrkDet2;
+    int stopPPSArmBToF, stopPPSArmFToF;
     double Mjj;
     double Mpf;
     double Rjj;
@@ -165,6 +170,16 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("xPPSArmFDet2",&xPPSArmFDet2,"xPPSArmFDet2/D");
   eventTree_->Branch("yPPSArmBDet2",&yPPSArmBDet2,"yPPSArmBDet2/D");
   eventTree_->Branch("yPPSArmFDet2",&yPPSArmFDet2,"yPPSArmFDet2/D");
+  eventTree_->Branch("xPPSArmFToF",&xPPSArmFToF,"xPPSArmFToF/D");
+  eventTree_->Branch("yPPSArmFToF",&yPPSArmFToF,"yPPSArmFToF/D");
+  eventTree_->Branch("xPPSArmBToF",&xPPSArmBToF,"xPPSArmBToF/D");
+  eventTree_->Branch("yPPSArmBToF",&yPPSArmBToF,"yPPSArmBToF/D");
+  eventTree_->Branch("stopPPSArmFTrkDet1",&stopPPSArmFTrkDet1,"stopPPSArmFTrkDet1/I");
+  eventTree_->Branch("stopPPSArmFTrkDet2",&stopPPSArmFTrkDet2,"stopPPSArmFTrkDet2/I");
+  eventTree_->Branch("stopPPSArmBTrkDet1",&stopPPSArmBTrkDet1,"stopPPSArmBTrkDet1/I");
+  eventTree_->Branch("stopPPSArmBTrkDet2",&stopPPSArmBTrkDet2,"stopPPSArmBTrkDet2/I");
+  eventTree_->Branch("stopPPSArmFToF",&stopPPSArmFToF,"stopPPSArmFToF/I");
+  eventTree_->Branch("stopPPSArmBToF",&stopPPSArmBToF,"stopPPSArmBToF/I");
   eventTree_->Branch("Mjj",&Mjj,"Mjj/D");
   eventTree_->Branch("Mpf",&Mpf,"Mpf/D");
   eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
@@ -228,6 +243,11 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   xPPSArmBDet1= -999.; yPPSArmBDet1= -999.;
   xPPSArmFDet2= -999.; yPPSArmFDet2= -999.;
   xPPSArmBDet2= -999.; yPPSArmBDet2= -999.;
+  xPPSArmFToF= -999.; yPPSArmFToF = -999.;
+  xPPSArmBToF=-999.; yPPSArmBToF = -999.;
+  stopPPSArmFTrkDet1 = -999; stopPPSArmFTrkDet2 = -999;
+  stopPPSArmBTrkDet1 = -999; stopPPSArmBTrkDet2 = -999;
+  stopPPSArmFToF = -999; stopPPSArmBToF = -999;
   Mjj= -999.;
   Mpf= -999.;
   Rjj= -999.;
@@ -359,6 +379,42 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   if(ppsSpectrum->ArmB.TrkDet2.X.size() > 0){
     xPPSArmBDet2 = ppsSpectrum->ArmB.TrkDet2.X[0];
     yPPSArmBDet2 = ppsSpectrum->ArmB.TrkDet2.Y[0];
+  }
+
+  // ArmF and ArmB, ToF info (x,y)
+  if(ppsSpectrum->ArmF.ToFDet.X.size() > 0){
+    xPPSArmFToF = ppsSpectrum->ArmF.ToFDet.X[0];
+    yPPSArmFToF = ppsSpectrum->ArmF.ToFDet.Y[0];
+  }
+
+  if(ppsSpectrum->ArmB.ToFDet.X.size() > 0){
+    xPPSArmBToF = ppsSpectrum->ArmB.ToFDet.X[0];
+    yPPSArmBToF = ppsSpectrum->ArmB.ToFDet.Y[0];
+  }
+
+  // ArmF and ArmB, HasStopped Info
+  if(ppsSpectrum->ArmF.ToFDet.HasStopped.size() > 0){
+    stopPPSArmFToF = ppsSpectrum->ArmF.ToFDet.HasStopped[0];
+  }
+
+  if(ppsSpectrum->ArmB.ToFDet.HasStopped.size() > 0){
+    stopPPSArmBToF = ppsSpectrum->ArmB.ToFDet.HasStopped[0];
+  }
+
+  if(ppsSpectrum->ArmF.TrkDet1.HasStopped.size() > 0){
+    stopPPSArmFTrkDet1 = ppsSpectrum->ArmF.TrkDet1.HasStopped[0];
+  }
+
+  if(ppsSpectrum->ArmB.TrkDet1.HasStopped.size() > 0){
+    stopPPSArmBTrkDet1 = ppsSpectrum->ArmB.TrkDet1.HasStopped[0];
+  }
+
+  if(ppsSpectrum->ArmF.TrkDet2.HasStopped.size() > 0){
+    stopPPSArmFTrkDet2 = ppsSpectrum->ArmF.TrkDet2.HasStopped[0];
+  }
+
+  if(ppsSpectrum->ArmB.TrkDet2.HasStopped.size() > 0){
+    stopPPSArmBTrkDet2 = ppsSpectrum->ArmB.TrkDet2.HasStopped[0];
   }
 
   if (debug){
