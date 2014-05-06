@@ -74,14 +74,13 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     virtual void beginJob() override;
     virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
     virtual void endJob() override;
-
+    void Init();
 
     // ----------member data ---------------------------
 
     void FillCollections(const edm::Event&, const edm::EventSetup&, bool debug);
     void SortingObjects(const edm::Event&, const edm::EventSetup&, bool debug);
     void AssociateJetsWithVertex(const edm::Event&, const edm::EventSetup&, bool debug);
-    void FillTTree(const edm::Event&, const edm::EventSetup&, bool debug);
 
     edm::InputTag jetTag_;
     edm::InputTag particleFlowTag_;
@@ -105,9 +104,9 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<double> JetsVector_phi;
     std::vector<double> PFVector_pt;
     std::vector<double> PFVector_eta;
-    std::vector<double> PFVector_phi;
 
     TTree* eventTree_;
+
     int nTracks;
     int nVertex;
     double GoldenVertexZ;
@@ -142,18 +141,6 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   energyPFThresholdHF_(iConfig.getParameter<double>("energyPFThresholdHF"))
 {
 
-}
-
-ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
-{
-
-}
-
-
-// ------------ method called once each job just before starting event loop  ------------
-void ExclusiveDijetsAnalysisUsingPPS::beginJob()
-{
-
   edm::Service<TFileService> fs;
   eventTree_ = fs->make<TTree>("Event","Event");
   eventTree_->Branch("JetsPt",&JetsVector_pt);
@@ -161,7 +148,6 @@ void ExclusiveDijetsAnalysisUsingPPS::beginJob()
   eventTree_->Branch("JetsPhi",&JetsVector_phi);
   eventTree_->Branch("PFCandidatePt",&PFVector_pt);
   eventTree_->Branch("PFCandidateEta",&PFVector_eta);
-  eventTree_->Branch("PFCandidatePhi",&PFVector_phi);
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
   eventTree_->Branch("nTracks",&nTracks,"nTracks/I");
   eventTree_->Branch("MinDistance",&MinDistance,"MinDistance/D");
@@ -185,6 +171,16 @@ void ExclusiveDijetsAnalysisUsingPPS::beginJob()
 
 }
 
+ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
+{
+}
+
+
+// ------------ method called once each job just before starting event loop  ------------
+void ExclusiveDijetsAnalysisUsingPPS::beginJob()
+{
+}
+
 // ------------ method called once each job just after ending the event loop  ------------
 void ExclusiveDijetsAnalysisUsingPPS::endJob()
 {
@@ -193,10 +189,48 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
 // ------------ method called for each event  ------------
 void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
+  Init(); // Clean Variables
   FillCollections(iEvent, iSetup, false); //true-> Print Outputs and Golden Vertex (PPS and CMS). False-> No print screen.
   SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
-  FillTTree(iEvent,iSetup, false); // fill and save ttree.
+  eventTree_->Fill();
+
+}
+
+// ------------ Clean Variables --------------
+
+void ExclusiveDijetsAnalysisUsingPPS::Init(){
+
+  JetsVector.clear();
+  VertexVector.clear();
+  TracksVector.clear();
+  PFVector.clear();
+  PPSSpecVector.clear();
+  PPSCMSVertex.clear();
+  MinimumDistance.clear();
+
+  JetsVector_pt.clear();
+  JetsVector_eta.clear();
+  JetsVector_phi.clear();
+  PFVector_pt.clear();
+  PFVector_eta.clear();
+
+  nTracks = 0;
+  nVertex = 0;
+  GoldenVertexZ = -999.;
+  MinDistance = -1.;
+  MaxDistance = -1.;
+  xiPPSArmF = -999.;
+  xiPPSArmB = -999.;
+  tPPSArmF = -999.;
+  tPPSArmB = -999.;
+  xPPSArmFDet1 = -999.; yPPSArmFDet1 = -999.;
+  xPPSArmBDet1= -999.; yPPSArmBDet1= -999.;
+  xPPSArmFDet2= -999.; yPPSArmFDet2= -999.;
+  xPPSArmBDet2= -999.; yPPSArmBDet2= -999.;
+  Mjj= -999.;
+  Mpf= -999.;
+  Rjj= -999.;
 
 }
 
@@ -214,7 +248,6 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
   int vertexsize = vertex->size();
   int itVertex;
-  VertexVector.clear();
 
   if(vertex->size()>0){
     for(itVertex=0; itVertex < vertexsize; ++itVertex){
@@ -230,7 +263,6 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
   int trackssize = tracks->size();
   int itTracks;
-  TracksVector.clear();
 
   if(tracks->size()>0){
     for(itTracks=0; itTracks < trackssize; ++itTracks){
@@ -248,7 +280,6 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
   int jetsize = jets->size();
   int itJets;
-  JetsVector.clear();
 
   if(jets->size()>0){
     for(itJets=0; itJets < jetsize; ++itJets){
@@ -264,7 +295,6 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
   int pfsize = PFCandidates->size();
   int itPF;
-  PFVector.clear();
 
   if(PFCandidates->size()>0){
 
@@ -285,11 +315,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 	PFVector.push_back(pfAll);
       }
     }
-
     Mpf = allCands.M();
-
-  }else{
-    Mpf = -999.;
   }
 
   // Fill PPS Spectrometer
@@ -299,60 +325,40 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   // Xi and t, ArmF and ArmB
   if(ppsSpectrum->ArmB.xi.size() > 0){
     xiPPSArmB = ppsSpectrum->ArmB.xi[0];
-  }else{
-    xiPPSArmB = -999.;
   }
 
   if(ppsSpectrum->ArmF.xi.size() > 0){
     xiPPSArmF = ppsSpectrum->ArmF.xi[0];
-  }else{
-    xiPPSArmF = -999.;
   }
 
   if(ppsSpectrum->ArmB.t.size() > 0){
     tPPSArmB = ppsSpectrum->ArmB.t[0];
-  }else{
-    tPPSArmB = -999.;
   }
 
   if(ppsSpectrum->ArmF.t.size() > 0){
     tPPSArmF = ppsSpectrum->ArmF.t[0];
-  }else{
-    tPPSArmF = -999.;
   }
 
   // ArmF and ArmB, Det1 info (x,y)
   if(ppsSpectrum->ArmF.TrkDet1.X.size() > 0){
     xPPSArmFDet1 = ppsSpectrum->ArmF.TrkDet1.X[0];
     yPPSArmFDet1 = ppsSpectrum->ArmF.TrkDet1.Y[0];
-  }else{
-    xPPSArmFDet1 = -999.;
-    yPPSArmFDet1 = -999.;
   }
 
   if(ppsSpectrum->ArmB.TrkDet1.X.size() > 0){
     xPPSArmBDet1 = ppsSpectrum->ArmB.TrkDet1.X[0];
     yPPSArmBDet1 = ppsSpectrum->ArmB.TrkDet1.Y[0];
-  }else{
-    xPPSArmBDet1 = -999.;
-    yPPSArmBDet1 = -999.;
   }
 
   // ArmF and ArmB, Det2 info (x,y)
   if(ppsSpectrum->ArmF.TrkDet2.X.size() > 0){
     xPPSArmFDet2 = ppsSpectrum->ArmF.TrkDet2.X[0];
     yPPSArmFDet2 = ppsSpectrum->ArmF.TrkDet2.Y[0];
-  }else{
-    xPPSArmFDet2 = -999.;
-    yPPSArmFDet2 = -999.;
   }
 
   if(ppsSpectrum->ArmB.TrkDet2.X.size() > 0){
     xPPSArmBDet2 = ppsSpectrum->ArmB.TrkDet2.X[0];
     yPPSArmBDet2 = ppsSpectrum->ArmB.TrkDet2.Y[0];
-  }else{
-    xPPSArmBDet2 = -999.;
-    yPPSArmBDet2 = -999.;
   }
 
   if (debug){
@@ -382,7 +388,6 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
       for (unsigned int i=0;i<ppsSpectrum->vtxZ.size();i++){
 	cout << "\nPPS: vtxZ[" << i << "]: " << ppsSpectrum->vtxZ[i] << " mm" << endl;
       }
-
 
       // ARM-F
       for (unsigned int i=0;i<ppsSpectrum->ArmF.t.size();i++){
@@ -476,20 +481,12 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
   // Debug Jets Details
   bool debugdetails = false;
 
-  // Cleaning Vectors
-  JetsVector_pt.clear();
-  JetsVector_eta.clear();
-  JetsVector_phi.clear();
-  PFVector_pt.clear();
-  PFVector_eta.clear();
-  PFVector_phi.clear();
 
   // Fill PF Vectors
   if(PFVector.size()>0){
     for (unsigned int i=0;i<PFVector.size();i++){
       PFVector_pt.push_back(PFVector[i]->pt());
       PFVector_eta.push_back(PFVector[i]->eta());
-      PFVector_phi.push_back(PFVector[i]->phi());
     }
   }
 
@@ -512,8 +509,6 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
       JetsVector_eta.push_back(JetsVector[sortJetsVector[i]]->eta());
       JetsVector_phi.push_back(JetsVector[sortJetsVector[i]]->phi());
     }
-
-
 
     if (debug){
       cout << "\n--BEGIN--" << endl;
@@ -540,15 +535,11 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
       dijetSystem += JetsVector[sortJetsVector[0]]->p4();
       dijetSystem += JetsVector[sortJetsVector[1]]->p4();
       Mjj = dijetSystem.M();
-    }else{
-      Mjj = -999.;
     }
   }
 
   if ( (Mjj > 0.) && (Mpf > 0.)){
     Rjj = Mjj/Mpf;
-  }else{
-    Rjj=-999.;
   }
 
 }
@@ -561,11 +552,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
       cout << "Position (x,y,z): " << VertexVector[indexGold]->position() << " mm" << endl;
     }
     GoldenVertexZ = VertexVector[indexGold]->z();
-  }else{
-    GoldenVertexZ = -999.;
   }
-
-  MinimumDistance.clear();
 
   for (unsigned int i=0;i<TracksVector.size();i++){
     if(indexGold != -999){
@@ -590,16 +577,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     }
     MinDistance = MinimumDistance[sortMinVector[0]];
     MaxDistance = MinimumDistance[sortMinVector[MinimumDistance.size()-1]];
-  }else{
-    MinDistance = -1.;
-    MaxDistance = -1.;
   }
-
-}
-
-void ExclusiveDijetsAnalysisUsingPPS::FillTTree(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
-
-  eventTree_->Fill();
 
 }
 
