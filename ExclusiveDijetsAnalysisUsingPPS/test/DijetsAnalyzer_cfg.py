@@ -9,11 +9,11 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
     fileNames = cms.untracked.vstring(
-          'file:/storage1/dmf/Samples/PPS/GG_newtest_1.root',
-          'file:/storage1/dmf/Samples/PPS/GG_newtest_2.root',
-          'file:/storage1/dmf/Samples/PPS/GG_newtest_3.root',
-          'file:/storage1/dmf/Samples/PPS/GG_newtest_4.root',
-          'file:/storage1/dmf/Samples/PPS/GG_newtest_5.root'
+          'file:///storage1/dmf/Samples/PPS/GG_new2_1.root',
+          'file:///storage1/dmf/Samples/PPS/GG_new2_2.root',
+          'file:///storage1/dmf/Samples/PPS/GG_new2_3.root',
+          'file:///storage1/dmf/Samples/PPS/GG_new2_4.root',
+          'file:///storage1/dmf/Samples/PPS/GG_new2_5.root'
     )
 )
 
