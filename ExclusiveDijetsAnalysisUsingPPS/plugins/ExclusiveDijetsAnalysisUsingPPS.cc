@@ -104,12 +104,14 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<double> JetsVector_phi;
     std::vector<double> PFVector_pt;
     std::vector<double> PFVector_eta;
+    std::vector<double> VertexCMSVectorZ;
 
     TTree* eventTree_;
 
     int nTracks;
     int nVertex;
     double GoldenVertexZ;
+    double VertexZPPS;
     double MinDistance;
     double MaxDistance;
     double xiPPSArmF;
@@ -153,11 +155,13 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("JetsPhi",&JetsVector_phi);
   eventTree_->Branch("PFCandidatePt",&PFVector_pt);
   eventTree_->Branch("PFCandidateEta",&PFVector_eta);
+  eventTree_->Branch("VertexCMSVectorZ",&VertexCMSVectorZ);
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
   eventTree_->Branch("nTracks",&nTracks,"nTracks/I");
   eventTree_->Branch("MinDistance",&MinDistance,"MinDistance/D");
   eventTree_->Branch("MaxDistance",&MaxDistance,"MaxDistance/D");
   eventTree_->Branch("GoldenVertexZ",&GoldenVertexZ,"GoldenVertexZ/D");
+  eventTree_->Branch("VertexZPPS",&VertexZPPS,"VertexZPPS/D");
   eventTree_->Branch("xiPPSArmB",&xiPPSArmB,"xiPPSArmB/D");
   eventTree_->Branch("xiPPSArmF",&xiPPSArmF,"xiPPSArmF/D");
   eventTree_->Branch("tPPSArmB",&tPPSArmB,"tPPSArmB/D");
@@ -183,6 +187,7 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("Mjj",&Mjj,"Mjj/D");
   eventTree_->Branch("Mpf",&Mpf,"Mpf/D");
   eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
+
 
 }
 
@@ -229,6 +234,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   JetsVector_phi.clear();
   PFVector_pt.clear();
   PFVector_eta.clear();
+  VertexCMSVectorZ.clear();
 
   nTracks = 0;
   nVertex = 0;
@@ -251,6 +257,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   Mjj= -999.;
   Mpf= -999.;
   Rjj= -999.;
+  VertexZPPS = -999.;
 
 }
 
@@ -417,6 +424,11 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
     stopPPSArmBTrkDet2 = ppsSpectrum->ArmB.TrkDet2.HasStopped[0];
   }
 
+  // PPS Vertex
+  if(ppsSpectrum->vtxZ.size() > 0){
+    VertexZPPS = ppsSpectrum->vtxZ[0];
+  }
+
   if (debug){
     cout << "\n--PPS INFO--" << endl;
     if (ppsSpectrum->vtxZ.size() > 0) cout << "vtxZ[0]: " << ppsSpectrum->vtxZ[0] << " | Vector Size: " << ppsSpectrum->vtxZ.size() << endl;
@@ -499,6 +511,9 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   PPSCMSVertex.clear();
 
   for (unsigned int i=0;i<VertexVector.size();i++){
+
+    VertexCMSVectorZ.push_back(VertexVector[i]->z());
+
     if (ppsSpectrum->vtxZ.size() > 0){ 
       PPSCMSVertex.push_back(std::pair<double,double>(fabs(ppsSpectrum->vtxZ[0] - VertexVector[i]->z()), VertexVector[i]->z()));
     }else{
