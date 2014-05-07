@@ -156,7 +156,7 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
   eventTree_->Branch("nTracks",&nTracks,"nTracks/I");
   eventTree_->Branch("MinDistance",&MinDistance,"MinDistance/D");
-  eventTree_->Branch("MaxDistance",&MinDistance,"MaxDistance/D");
+  eventTree_->Branch("MaxDistance",&MaxDistance,"MaxDistance/D");
   eventTree_->Branch("GoldenVertexZ",&GoldenVertexZ,"GoldenVertexZ/D");
   eventTree_->Branch("xiPPSArmB",&xiPPSArmB,"xiPPSArmB/D");
   eventTree_->Branch("xiPPSArmF",&xiPPSArmF,"xiPPSArmF/D");
