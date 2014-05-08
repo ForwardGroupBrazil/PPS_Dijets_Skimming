@@ -729,9 +729,8 @@ void ExclusiveDijetsAnalysisUsingPPS::TestCollection(const edm::Event& iEvent, c
   }
 
   if(JetsSameVector_pt.size()>1){
-    cout << "-----/-----/-----/-----" << endl;
     for(unsigned int i=0;i<JetsSameVector_pt.size();i++){
-      cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << endl;
+      cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) mm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [mm]: " << VertexZPPS << endl;
     }
   }
 
