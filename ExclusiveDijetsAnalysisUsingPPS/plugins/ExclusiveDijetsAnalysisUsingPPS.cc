@@ -81,6 +81,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     void FillCollections(const edm::Event&, const edm::EventSetup&, bool debug);
     void SortingObjects(const edm::Event&, const edm::EventSetup&, bool debug);
     void AssociateJetsWithVertex(const edm::Event&, const edm::EventSetup&, bool debug);
+    void TestCollection(const edm::Event&, const edm::EventSetup&, bool debug);
 
     edm::InputTag jetTag_;
     edm::InputTag particleFlowTag_;
@@ -97,7 +98,9 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<const reco::PFCandidate*> PFVector;
     std::vector<const PPSSpectrometer*> PPSSpecVector;
     std::vector< std::pair<double,double> > PPSCMSVertex;
+    std::vector<const reco::PFJet*> PFJets;
     std::vector<double> MinimumDistance;   
+    std::vector< math::XYZVector > JetVertex;
 
     std::vector<double> JetsVector_pt;
     std::vector<double> JetsVector_eta;
@@ -188,7 +191,6 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("Mpf",&Mpf,"Mpf/D");
   eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
 
-
 }
 
 ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
@@ -215,6 +217,8 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
   AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   eventTree_->Fill();
 
+  TestCollection(iEvent, iSetup, false);
+
 }
 
 // ------------ Clean Variables --------------
@@ -228,6 +232,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   PPSSpecVector.clear();
   PPSCMSVertex.clear();
   MinimumDistance.clear();
+  PFJets.clear();
 
   JetsVector_pt.clear();
   JetsVector_eta.clear();
@@ -235,6 +240,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   PFVector_pt.clear();
   PFVector_eta.clear();
   VertexCMSVectorZ.clear();
+  JetVertex.clear();
 
   nTracks = 0;
   nVertex = 0;
@@ -649,6 +655,178 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     MinDistance = MinimumDistance[sortMinVector[0]];
     MaxDistance = MinimumDistance[sortMinVector[MinimumDistance.size()-1]];
   }
+
+}
+
+void ExclusiveDijetsAnalysisUsingPPS::TestCollection(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
+
+  /*
+     if(JetsVector.size()>0){
+     for (unsigned int i=0;i<JetsVector.size();i++){
+  //cout << JetsVector[i]->getTrackRefs() << endl;
+  }
+  }
+   */
+
+
+  // Get Jet-track association at Vertex
+  //edm::Handle<reco::JetTracksAssociation::Container> jetTracksAtVertex;
+  //iEvent.getByLabel("ak5JetTracksAssociatorAtVertexPF",jetTracksAtVertex);
+
+  //   const reco::JetTracksAssociation::Container jtV = *(jetTracksAtVertex.product());
+
+
+
+  //    const reco::TrackRefVector trAtVertex = reco::JetTracksAssociation::getValue(jtV,fJet);
+
+  // Jet to tracks associator
+
+  /*
+     edm::Handle<reco::JetTracksAssociationCollection> jetTracks;
+     event.getByLabel("jetTracksAssociation_i", jetTracks);
+
+     const edm::Handle<reco::JetTracksAssociationCollection> & jetTracksAssociation
+     reco::JetTracksAssociationCollection::const_iterator it = jetTracksAssociation->begin();
+
+     int i=0;
+
+     for (; it != jetTracksAssociation->end(); it++, i++)
+     {
+  // get jetTracks object
+  reco::JetTracksAssociationRef jetTracks(jetTracksAssociation, i);
+  // get the tracks associated to the jet
+  reco::TrackRefVector tracks = jetTracks->second;
+  for (std::size_t index = 0; index < tracks.size(); index++)
+  {
+  edm::RefToBase<reco::Track> track(tracks[index]);
+
+  double pt = tracks[index]->pt();
+  }
+  }
+   */
+
+  //    std::auto_ptr< reco::TrackJetCollection > augmentedTrackJets (new reco::TrackJetCollection);
+
+  //    edm::Handle<reco::TrackJetCollection> trackjets;
+  //    iEvent.getByLabel("ak5TrackJets", trackjets);
+
+
+  /*
+     for (reco::TrackJetCollection::const_iterator trackjet = trackjets->begin();
+     trackjet != trackjets->end(); trackjet++) {
+     augmentedTrackJets->push_back(*trackjet);
+     }
+   */
+  /*
+     for (reco::TrackJetCollection::const_iterator trackjet = trackjets->begin(); trackjet != trackjets->end(); trackjet++) {
+     for (unsigned itr=0; itr<trackjet->numberOfTracks(); ++itr) {
+     edm::Ptr<reco::Track> track = trackjet->track(itr);
+     double trackEta = track->eta();
+     double trackPhi = track->phi();
+     cout << trackEta << trackPhi << endl;
+     }
+     }
+   */
+
+
+  //look at JetTracks, first = Jets, Second = Tracks
+
+  /*
+
+     edm::Handle<reco::JetTracksAssociationCollection> associationHandle;
+     iEvent.getByLabel("ak5JetTracksAssociatorAtVertex", associationHandle);
+     reco::JetTracksAssociationCollection::const_iterator it = associationHandle->begin();
+
+     int i = 0;
+   */
+
+  /*
+  // Fill Jets
+  Handle<edm::View<reco::Jet> > jets;
+  iEvent.getByLabel(jetTag_,jets);
+
+  const std::vector <edm::RefToBase<reco::Jet> >& jets;
+
+  //  int jetsize = jets->size();
+  //  int itJets;
+
+  //  if(jets->size()>0){
+  //    for(itJets=0; itJets < jetsize; ++itJets){
+  for (unsigned j = 0; j < jets->size(); ++j) { 
+  reco::PFJet const * pfJet = dynamic_cast<reco::PFJet const *>( &* (jets[j]) ) ;
+  reco::TrackRefVector tracks = pfJet->getTrackRefs();
+  for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
+  cout << "Track, eta: " << (*itTrack)->eta() << endl;
+  }
+  }
+  //  }
+   */
+
+  /*
+
+     for(; it != associationHandle->end(); it++, i++){
+     const reco::JetTracksAssociationRef & jetTracks = Ref<reco::JetTracksAssociationCollection>(associationHandle,i);
+     reco::TrackRefVector tracks = it->second;
+     for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
+//cout << "test..."<< endl;
+cout << "Jets, associated tracks: " << (*jetTracks)->eta() << endl;
+cout << "Track, eta: " << (*itTrack)->eta() << endl;
+}
+}
+   */
+
+double vx_mean = 1.;
+double vy_mean = 1.;
+double vz_mean = 1.;
+double pt2_x = 0.;
+double pt2_y = 0.;
+double pt2_z = 0.;
+double pt2 = 0.;
+
+edm::Handle<std::vector<reco::PFJet> > pfJetCollection;
+iEvent.getByLabel(jetTag_, pfJetCollection);
+
+for( unsigned k=0; k<pfJetCollection->size(); k++ ) {
+  const reco::PFJet* pfjet = &(pfJetCollection->at(k));
+  reco::TrackRefVector tracks = pfjet->getTrackRefs();
+
+  for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
+    //cout << "Track, (vx,vy,vz) [mm]: (" << (*itTrack)->vx() << ", " << (*itTrack)->vy() << ", " << (*itTrack)->vz() << ") | pT [GeV]: " << (*itTrack)->pt() << endl;
+    pt2 += (*itTrack)->pt()*(*itTrack)->pt();
+    pt2_x += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vx();
+    pt2_y += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vy();
+    pt2_z += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vz();
+  }
+
+  if (pt2 > 0.) {
+    vx_mean = pt2_x/pt2;
+    vy_mean = pt2_y/pt2;
+    vz_mean = pt2_z/pt2;
+  }
+
+  math::XYZVector coord(vx_mean,vy_mean,vz_mean);
+  PFJets.push_back(pfjet);
+  JetVertex.push_back(coord);
+  //cout << "\n<vx,vy,vz> [mm]: (" << vx_mean << ", " << vy_mean << ", " << vz_mean << ")\n" << endl;
+
+}
+
+/*
+   if(PFJets.size()>0){
+   for(unsigned int i=0;i<PFJets.size();i++){
+   cout << PFJets[i]->pt() << endl;
+   cout << PFJets[i]->vz() << endl;
+   }
+   }
+ */
+
+if(JetVertex.size()>0){
+  for(unsigned int i=0;i<JetVertex.size();i++){
+    cout << "\nJet pT: " << PFJets[i]->pt() << endl;
+    cout << "<vx,vy,vz> [mm]: (" << JetVertex[i].X() << ", " << JetVertex[i].Y() << ", " << JetVertex[i].Z() << ")\n" << endl;
+  }
+}
+
 
 }
 
