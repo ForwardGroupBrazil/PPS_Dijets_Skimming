@@ -81,7 +81,6 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     void FillCollections(const edm::Event&, const edm::EventSetup&, bool debug);
     void SortingObjects(const edm::Event&, const edm::EventSetup&, bool debug);
     void AssociateJetsWithVertex(const edm::Event&, const edm::EventSetup&, bool debug);
-    void TestCollection(const edm::Event&, const edm::EventSetup&, bool debug);
 
     edm::InputTag jetTag_;
     edm::InputTag particleFlowTag_;
@@ -109,12 +108,16 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<double> PFVector_pt;
     std::vector<double> PFVector_eta;
     std::vector<double> VertexCMSVectorZ;
+    std::vector<int> TracksPerJetVector;
     std::vector<double> JetsSameVector_pt;
     std::vector<double> JetsSameVector_eta;
     std::vector<double> JetsSameVector_phi;
 
     TTree* eventTree_;
 
+    double JetsSameVertex_x;
+    double JetsSameVertex_y;
+    double JetsSameVertex_z;
     int nTracks;
     int nVertex;
     double GoldenVertexZ;
@@ -160,9 +163,16 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("JetsPt",&JetsVector_pt);
   eventTree_->Branch("JetsEta",&JetsVector_eta);
   eventTree_->Branch("JetsPhi",&JetsVector_phi);
+  eventTree_->Branch("TracksPerJet",&TracksPerJetVector);
   eventTree_->Branch("PFCandidatePt",&PFVector_pt);
   eventTree_->Branch("PFCandidateEta",&PFVector_eta);
   eventTree_->Branch("VertexCMSVectorZ",&VertexCMSVectorZ);
+  eventTree_->Branch("JetsSameVertex_pt",&JetsSameVector_pt);
+  eventTree_->Branch("JetsSameVertex_eta",&JetsSameVector_eta);
+  eventTree_->Branch("JetsSameVertex_phi",&JetsSameVector_phi);
+  eventTree_->Branch("JetsSameVertex_x",&JetsSameVertex_x,"JetsSameVertex_x/D");
+  eventTree_->Branch("JetsSameVertex_y",&JetsSameVertex_y,"JetsSameVertex_y/D");
+  eventTree_->Branch("JetsSameVertex_z",&JetsSameVertex_z,"JetsSameVertex_z/D");
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
   eventTree_->Branch("nTracks",&nTracks,"nTracks/I");
   eventTree_->Branch("MinDistance",&MinDistance,"MinDistance/D");
@@ -221,8 +231,6 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
   AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   eventTree_->Fill();
 
-  TestCollection(iEvent, iSetup, false);
-
 }
 
 // ------------ Clean Variables --------------
@@ -249,7 +257,11 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   PFVector_eta.clear();
   VertexCMSVectorZ.clear();
   JetVertex.clear();
+  TracksPerJetVector.clear();
 
+  JetsSameVertex_x = -999.;
+  JetsSameVertex_y = -999.;
+  JetsSameVertex_z = -999.;
   nTracks = 0;
   nVertex = 0;
   GoldenVertexZ = -999.;
@@ -523,8 +535,6 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   // Idea: The choosen Vertex_CMS_z will be find from the minimum | Vertex_PPS_z - Vertex_CMS_z |. 
   //
 
-  PPSCMSVertex.clear();
-
   for (unsigned int i=0;i<VertexVector.size();i++){
 
     VertexCMSVectorZ.push_back(VertexVector[i]->z());
@@ -554,7 +564,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
     // Selected Vertex CMS/PPS
     if (indexGold != -999){
       cout << "\n--GOLDEN VERTEX ASSOCIATION CMS/PPS--" << endl;
-      cout << "Position (x,y,z): " << VertexVector[indexGold]->position() << " mm" << endl;
+      cout << "Position (x,y,z): " << VertexVector[indexGold]->position() << " cm" << endl;
     }
     cout << "--END--\n\n" << endl;
   }
@@ -603,14 +613,14 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
 	if (debugdetails) {
 	  cout << "ORDERED reco::PFJets[" << sortJetsVector[i] << "]\t---> " << JetsVector[sortJetsVector[i]]->print() << endl;}
 	else{
-	  cout << "ORDERED reco::PFJets[" << sortJetsVector[i] << "]\t---> pT [GeV]: " << JetsVector[sortJetsVector[i]]->pt() << " | eT [GeV]: " << JetsVector[sortJetsVector[i]]->et() << " | eta: " << JetsVector[sortJetsVector[i]]->eta() << " | phi: " << JetsVector[sortJetsVector[i]]->phi() << " | Vertex: " << JetsVector[sortJetsVector[i]]->vertex() << " mm" << " | Tracks Ref: " << JetsVector[sortJetsVector[i]]->getTrackRefs().size() << endl;
+	  cout << "ORDERED reco::PFJets[" << sortJetsVector[i] << "]\t---> pT [GeV]: " << JetsVector[sortJetsVector[i]]->pt() << " | eT [GeV]: " << JetsVector[sortJetsVector[i]]->et() << " | eta: " << JetsVector[sortJetsVector[i]]->eta() << " | phi: " << JetsVector[sortJetsVector[i]]->phi() << " | Vertex: " << JetsVector[sortJetsVector[i]]->vertex() << " cm" << " | Tracks Ref: " << JetsVector[sortJetsVector[i]]->getTrackRefs().size() << endl;
 	}
 
       }
 
       // Vertex
       for (unsigned int i=0;i<VertexVector.size();i++){
-	cout << "reco::Vertex[" << i << "]\t---> Position: " << VertexVector[i]->position() << " mm" << endl;
+	cout << "reco::Vertex[" << i << "]\t---> Position: " << VertexVector[i]->position() << " cm" << endl;
       }
       cout << "--END--\n\n" << endl;
     }
@@ -632,10 +642,12 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
 
 void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
 
+  bool debugdeep = false;
+
   if (indexGold != -999){
     if (debug) {
       cout << "\n--GOLDEN VERTEX ASSOCIATION CMS/PPS--" << endl;
-      cout << "Position (x,y,z): " << VertexVector[indexGold]->position() << " mm" << endl;
+      cout << "Position (x,y,z): " << VertexVector[indexGold]->position() << " cm" << endl;
     }
     GoldenVertexZ = VertexVector[indexGold]->z();
   }
@@ -658,16 +670,14 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 
   if(MinimumDistance.size()>0) {
     if (debug) {
-      cout << "Minimum Distance | Tracks(z)-Vertex(z) |: " << MinimumDistance[sortMinVector[0]] << " mm" << endl;
-      cout << "Maximum Distance | Tracks(z)-Vertex(z) |: " << MinimumDistance[sortMinVector[MinimumDistance.size()-1]] << " mm\n" << endl;
+      cout << "Minimum Distance | Tracks(z)-Vertex(z) |: " << MinimumDistance[sortMinVector[0]] << " cm" << endl;
+      cout << "Maximum Distance | Tracks(z)-Vertex(z) |: " << MinimumDistance[sortMinVector[MinimumDistance.size()-1]] << " cm\n" << endl;
     }
     MinDistance = MinimumDistance[sortMinVector[0]];
     MaxDistance = MinimumDistance[sortMinVector[MinimumDistance.size()-1]];
   }
 
-}
-
-void ExclusiveDijetsAnalysisUsingPPS::TestCollection(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
+  // A S S O C I A T I O N   O F   J E T S / V E R T E X
 
   double vx_mean = -999.;
   double vy_mean = -999.;
@@ -684,11 +694,16 @@ void ExclusiveDijetsAnalysisUsingPPS::TestCollection(const edm::Event& iEvent, c
     const reco::PFJet* pfjet = &(pfJetCollection->at(k));
     reco::TrackRefVector tracks = pfjet->getTrackRefs();
 
+    if (debug) cout << "#Tracks per jet: " << tracks.size() << " | Jet pT[GeV]: " << pfjet->pt() << endl;
+
     for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
       pt2 += (*itTrack)->pt()*(*itTrack)->pt();
       pt2_x += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vx();
       pt2_y += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vy();
       pt2_z += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vz();
+      if (debugdeep){
+	cout << "Track-> pT [GeV]: " << (*itTrack)->pt() << " | Eta: " << (*itTrack)->eta() << " | phi: " << (*itTrack)->phi() << " | Vertex Origin (x,y,z) [cm]: " << (*itTrack)->vx() << ", " << (*itTrack)->vy() << ", " << (*itTrack)->vz() << endl;  
+      }
     }
 
     if (pt2 > 0.) {
@@ -699,6 +714,7 @@ void ExclusiveDijetsAnalysisUsingPPS::TestCollection(const edm::Event& iEvent, c
 
     math::XYZVector coord(vx_mean,vy_mean,vz_mean);
     JetVertex.push_back(coord);
+    TracksPerJetVector.push_back(tracks.size());
 
   }
 
@@ -710,11 +726,15 @@ void ExclusiveDijetsAnalysisUsingPPS::TestCollection(const edm::Event& iEvent, c
     JetsSameVector_eta.push_back(JetsVector[0]->eta());
     JetsSameVector_phi.push_back(JetsVector[0]->phi());
 
+    JetsSameVertex_x = JetVertex[0].X();
+    JetsSameVertex_y = JetVertex[0].Y();
+    JetsSameVertex_z = JetVertex[0].Z();
+
     for(unsigned int i=1;i<JetsVector.size();i++){
 
       if(debug){
 	cout << "\nJet pT: " << JetsVector[i]->pt() <<endl;
-	cout << "<vx,vy,vz> [mm]: (" << JetVertex[i].X() << ", " << JetVertex[i].Y() << ", " << JetVertex[i].Z() << ")\n" << endl;
+	cout << "<vx,vy,vz> [cm]: (" << JetVertex[i].X() << ", " << JetVertex[i].Y() << ", " << JetVertex[i].Z() << ")\n" << endl;
       }
 
       if(fabs(JetVertex[0].Z()-JetVertex[i].Z()) < 0.01){
@@ -730,7 +750,7 @@ void ExclusiveDijetsAnalysisUsingPPS::TestCollection(const edm::Event& iEvent, c
 
   if(JetsSameVector_pt.size()>1){
     for(unsigned int i=0;i<JetsSameVector_pt.size();i++){
-      cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) mm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [mm]: " << VertexZPPS << endl;
+      if (debug) cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) cm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [cm]: " << VertexZPPS << endl;
     }
   }
 
