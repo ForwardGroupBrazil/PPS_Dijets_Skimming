@@ -25,6 +25,7 @@
 //#include <vector>
 #include <map>
 #include <cmath>
+#define PI 3.141592653589793
 using namespace std;
 void CEPDijetsPPS()
 {
@@ -32,14 +33,22 @@ void CEPDijetsPPS()
     gSystem->Load("libFWCoreFWLite.so");
     AutoLibraryLoader::enable();
     gROOT->ProcessLine("#include<vector>");
+    gROOT->ProcessLine(".exception"); 
     //------------ files -----------------
-    TFile *inf  = TFile::Open("ttreeCEPdijets.root");
-    TFile *outf = new TFile("DemoHistos.root","RECREATE");
+    TFile *inf  = TFile::Open("ttreeCEPdijetsPU.root");
+    TFile *outf = new TFile("CEPPPSPU_Histos.root","RECREATE");
     TTree *tr = (TTree*)inf->Get("demo/Event");
     //----------- define the tree branch --------
-    std::vector<double> *JetsPt =0;
-    std::vector<double>  *JetsEta =0;
-    std::vector<double>  *JetsPhi =0;
+    std::vector<double>  *JetsPt=0;
+    std::vector<double>  *JetsEta=0;
+    std::vector<double>  *JetsPhi=0;
+    std::vector<double> *JetsSameVertex_pt=0;
+    std::vector<double>  *JetsSameVertex_eta=0;
+    std::vector<double>  *JetsSameVertex_phi=0;
+    std::vector<double>  *CandidatesJets_pt=0;
+    std::vector<double>  *CandidatesJets_eta=0;
+    std::vector<double>  *CandidatesJets_phi=0; 
+    Double_t        VertexZPPS;
     Int_t           nVertex;
     Int_t           nTracks;
     Double_t        MinDistance;
@@ -64,12 +73,21 @@ void CEPDijetsPPS()
     Int_t           stopPPSArmFToF;
     Int_t           stopPPSArmBToF; 
     Double_t        Mjj;
+    Double_t        CandidatesMjj;
     Double_t        Mpf;
     Double_t        Rjj;
 
-    TBranch        *bJetsPt = 0;
-    TBranch        *bJetsEta = 0;   
-    TBranch        *bJetsPhi = 0;
+
+    TBranch        *bJetsPt=0;   //!
+    TBranch        *bJetsEta=0;   //!
+    TBranch        *bJetsPhi=0;   //!
+    TBranch        *bJetsSameVertex_pt=0 ;
+    TBranch        *bJetsSameVertex_eta=0;   
+    TBranch        *bJetsSameVertex_phi=0;
+    TBranch        *bCandidatesJets_pt=0;
+    TBranch        *bCandidatesJets_eta=0;
+    TBranch        *bCandidatesJets_phi=0;
+    TBranch        *bVertexZPPS; 
     TBranch        *bnVertex;   //!
     TBranch        *bnTracks;   //!
     TBranch        *bMinDistance;   //!
@@ -94,11 +112,20 @@ void CEPDijetsPPS()
     TBranch        *bstopPPSArmFToF;   //!
     TBranch        *bstopPPSArmBToF;   //!
     TBranch        *bMjj;   //!
+    TBranch        *bCandidatesMjj=0;
     TBranch        *bMpf;   //!
     TBranch        *bRjj;   //!
-    tr->SetBranchAddress("JetsPt",&JetsPt,&bJetsPt);
-    tr->SetBranchAddress("JetsEta",&JetsEta,&bJetsEta);
-    tr->SetBranchAddress("JetsPhi",&JetsPhi,&bJetsPhi);
+
+    tr->SetBranchAddress("JetsPt", &JetsPt, &bJetsPt);
+    tr->SetBranchAddress("JetsEta", &JetsEta, &bJetsEta);
+    tr->SetBranchAddress("JetsPhi", &JetsPhi, &bJetsPhi);
+    tr->SetBranchAddress("JetsSameVertex_pt",&JetsSameVertex_pt,&bJetsSameVertex_pt);
+    tr->SetBranchAddress("JetsSameVertex_eta",&JetsSameVertex_eta,&bJetsSameVertex_eta);
+    tr->SetBranchAddress("JetsSameVertex_phi",&JetsSameVertex_phi,&bJetsSameVertex_phi);
+    tr->SetBranchAddress("CandidatesJets_pt",&CandidatesJets_pt,&bCandidatesJets_pt);
+    tr->SetBranchAddress("CandidatesJets_eta",&CandidatesJets_eta,&bCandidatesJets_eta);  
+    tr->SetBranchAddress("CandidatesJets_phi",&CandidatesJets_phi,&bCandidatesJets_phi);  
+    tr->SetBranchAddress("VertexZPPS", &VertexZPPS, &bVertexZPPS);
     tr->SetBranchAddress("nVertex", &nVertex, &bnVertex);
     tr->SetBranchAddress("nTracks", &nTracks, &bnTracks);
     tr->SetBranchAddress("MinDistance", &MinDistance, &bMinDistance);
@@ -122,26 +149,49 @@ void CEPDijetsPPS()
     tr->SetBranchAddress("stopPPSArmBTrkDet2", &stopPPSArmBTrkDet2, &bstopPPSArmBTrkDet2);
     tr->SetBranchAddress("stopPPSArmFToF", &stopPPSArmFToF, &bstopPPSArmFToF);
     tr->SetBranchAddress("stopPPSArmBToF", &stopPPSArmBToF, &bstopPPSArmBToF);
+    tr->SetBranchAddress("CandidatesMjj",&CandidatesMjj,&bCandidatesMjj);  
     tr->SetBranchAddress("Mjj", &Mjj, &bMjj);
     tr->SetBranchAddress("Mpf", &Mpf, &bMpf);
     tr->SetBranchAddress("Rjj", &Rjj, &bRjj);
     //----------- settings ---------------
     int NEVENTS(1000);
-    double pTmin(100);
-    double MxPPS(0);
-    double MJJ(0);
+    int Njets(0);
+    double pTmin(50.0);
+    double etamin(-2.0);
+    double etamax(2.0);
+    double MxPPS(0.0);
+    double MJJ(0.0);
+    double MxPPSBeforeCuts(0.0);
+    double MJJBC(0.0);
+    double deltaeta(0.0);
+    double deltaphi(0.0);
     double S(13000.0);
-    double xmax= -3.1;
-    double xmin= -23.1;
-    double ymax=  9.0;
-    double ymin=  -9.0;
+    double xmax(-3.15);
+    double xmin(-23.15);
+    double xmax2(-2.03);
+    double xmin2(-22.03); 
+    double ymax( 9.0);
+    double ymin(-9.0);
+
     bool verbose = false;
 
     //--------- book histos ---------------------------------
+    TH1F *hNJets = new TH1F("NJets","N Jets;  N Jets; N events",100,0,100);
+    TH1F *hVertexZCMS = new TH1F("VertexZCMS"," Vertex Z CMS[mm];  Vertex Z [mm]; N events",25,-25.0,25.0);
+    TH1F *hVertexZPPS = new TH1F("VertexZPPS","Vertex Z PPS [mm]; Vertex  Z [mm]; N events",25,-25.0,25.0);
+    TH2F *hVertexZCMSPPS = new TH2F("VertexZCMSPPS","Vertex Z CMS vs Vertex Z  PPS; Vertex Z CMS [mm]; Vertex Z PPS [mm]",25,-25.0,25.0,25, -25.0,25.0);
     TH1F *hLeadingJetPt = new TH1F("LeadingJetPt","Leading Jet - P_{T} Distribution; P_{T} [GeV.c^{-1}]; N events",100,0,500);
     TH1F *hSecondJetPt = new TH1F("SecondJetPt","Second Jet - P_{T} Distribution; P_{T} [GeV.c^{-1}]; N events",100,0,500);
+    TH1F *hLeadingJetEta = new TH1F("LeadingJetEta","Leading Jet - #eta Distribution; #eta; N events",100,-5.2,5.2);
+    TH1F *hSecondJetEta = new TH1F("SecondJetEta","Second Jet - #eta Distribution; #eta; N events",100,-5.2,5.2);
+    TH1F *hLeadingJetPhi = new TH1F("LeadingJetPhi","Leading Jet - #phi Distribution; #phi; N events",100,-1.2*PI,1.2*PI);
+    TH1F *hSecondJetPhi = new TH1F("SecondJetPhi","Second Jet - #phi Distribution; #phi; N events",100,-1.2*PI,1.2*PI);  
+    TH1F *hDeltaEtaJets = new TH1F("DeltaEtaJets","#Delta#eta_{jj} Distribution; #Delta#eta_{jj}; N events",20,0.0,5.2);
+    TH1F *hDeltaPhiJets = new TH1F("DeltaPhiJets","#Delta#phi_{jj} Distribution; #Delta#phi_{jj}; N events",20,0.0,1.2*PI);
     TH1F *hMjj = new TH1F( "Mjj" , "Mass_{JJ} Distribution; M_{jj}  [GeV]; N events" , 100, 0., 1000. );
     TH1F *hMx = new TH1F("Mx" , "Mass_{X} Distribution; M_{x}  [GeV]; N events" , 100, 0., 1000. );
+    TH1F *hMjjBC = new TH1F( "MjjBC" , "Mass_{JJ} Distribution; M_{jj}  [GeV]; N events" , 100, 0., 1000. );
+    TH1F *hMxBC = new TH1F("MxBC" , "Mass_{X} Distribution; M_{x}  [GeV]; N events" , 100, 0., 1000. );
     TH1F *hPPS_xiARMPlus =  new TH1F( "PPS_xiARMPlus" , "#xi_{plus} PPS; #xi_{plus}; N Event" , 100, 0., 0.4 );
     TH1F *hPPS_xiARMMinus =  new TH1F( "PPS_xiARMMinus" , "#xi_{minus} PPS; #xi_{minus}; N Event" , 100, 0., 0.4 ); 
     TH2F *hPPS_xVsy_ARMPlusDt1 =  new TH2F( "PPS_xVsy_ARMPlusDt1" , "PPS x_vs_y_{ARMPlusDt1}; x [mm]; y [mm]" , 100, -50.0, 10.0,100,-10.0,10.0 ); 
@@ -149,8 +199,17 @@ void CEPDijetsPPS()
     TH2F *hPPS_xVsy_ARMMinusDt1 =  new TH2F( "PPS_xVsy_ARMMinusDt1" , "PPS x_vs_y_{ARMMinusDt1}; x [mm]; y [mm]" , 100, -50.0, 10.0,100,-10.0,10.0 ); 
     TH2F *hPPS_xVsy_ARMMinusDt2 =  new TH2F( "PPS_xVsy_ARMMinusDt2" , "PPS x_vs_y_{ARMMinusDt2}; x [mm]; y [mm]" , 100, -50.0, 10.0,100,-10.0,10.0 ); 
     TH2F *hMxPPSvsMjj =  new TH2F("MxvsMjj" , "Mass_{X} vs M_{JJ}  Distribution; M_{x}  [GeV];  M_{jj}  [GeV]" , 100, 0., 1000.,100, 0., 1000. );
+    TH2F *hMxPPSvsMjjBC =  new TH2F("MxvsMjjBC" , "Mass_{X} vs M_{JJ}  Distribution; M_{x}  [GeV];  M_{jj}  [GeV]" , 100, 0., 1000.,100, 0., 1000. );
+    TH1F *hLeadingJetPtAfterPPS = new TH1F("LeadingJetPtAfterPPS","Leading Jet - P_{T} Distribution; P_{T} [GeV.c^{-1}]; N events",100,0,500);
+    TH1F *hSecondJetPtAfterPPS = new TH1F("SecondJetPtAfterPPS","Second Jet - P_{T} Distribution; P_{T} [GeV.c^{-1}]; N events",100,0,500);
+    TH1F *hLeadingJetEtaAfterPPS = new TH1F("LeadingJetEtaAfterPPS","Leading Jet - #eta Distribution; #eta; N events",100,-5.2,5.2);
+    TH1F *hSecondJetEtaAfterPPS = new TH1F("SecondJetEtaAfterPPS","Second Jet - #eta Distribution; #eta; N events",100,-5.2,5.2);
+    TH1F *hLeadingJetPhiAfterPPS = new TH1F("LeadingJetPhiAfterPPS","Leading Jet - #phi Distribution; #phi; N events",100,-1.2*PI,1.2*PI);  
+    TH1F *hSecondJetPhiAfterPPS = new TH1F("SecondJetPhiAfterPPS","Second Jet - #phi Distribution; #phi; N events",100,-1.2*PI,1.2*PI);    
+    TH1F *hDeltaEtaJetsAfterPPS = new TH1F("DeltaEtaJetsAfterPPS","#Delta#eta_{jj} Distribution; #Delta#eta_{jj}; N events",20,0.0,5.2);
+    TH1F *hDeltaPhiJetsAfterPPS = new TH1F("DeltaPhiJetsAfterPPS","#Delta#phi_{jj} Distribution; #Delta#phi_{jj}; N events",20,0.0,1.2*PI);
     //----------- counters -----------------------
-    int counter_jet(0);
+    int counter_jetpT(0),counter_jetEta(0), counter_fiducial(0), counter_hasStoped(0),counter_xiArms(0);
     //----------- tree reading -------------------
     unsigned NEntries = tr->GetEntries();
     cout<<"Reading TREE: "<<NEntries<<" events"<<endl;
@@ -165,51 +224,98 @@ void CEPDijetsPPS()
         decade = k;          
         //----------- read the event --------------
         tr->GetEntry(i);
+        Njets = CandidatesJets_pt->size();
+        hNJets->Fill(Njets);
 
-        if(JetsPt->at(0)>pTmin && JetsPt->at(1)>pTmin){
-            //------- fill some Jets  histograms ------------------
-            hLeadingJetPt->Fill(JetsPt->at(0));
-            hSecondJetPt->Fill(JetsPt->at(1));
-            //--------- PPS x vs y -----------------------
-            //x,det1 e det2 nos dois arms < - 3.1 e  > -23.1 mm
-            //y,det1 e det2 nos dois arms > -9 e < 9 mm
-            bool cutXdet1 = ((xmin<xPPSArmFDet1 && xPPSArmFDet1<xmax) && (xmin<xPPSArmBDet1 && xPPSArmBDet1<xmax));
-            bool cutXdet2 = ((xmin<xPPSArmFDet2 && xPPSArmFDet2<xmax) && (xmin<xPPSArmBDet2  && xPPSArmBDet2<xmax));
-            bool cutYdet1 = ((ymin<yPPSArmFDet1 && yPPSArmFDet1<ymax) && (ymin<yPPSArmBDet1 && yPPSArmBDet1<ymax));
-            bool cutYdet2 = ((ymin<yPPSArmFDet2 && yPPSArmFDet2<ymax) && (ymin<yPPSArmBDet2 &&  yPPSArmBDet2<ymax));
-            if(verbose)std::cout<<"Xdet1:" <<cutXdet1<<"Xdet2:"<<cutXdet2<<"Ydet1: "<<cutYdet1<<"Ydet2: "<<cutYdet2<<std::endl;
-            //--------- PPS HasStoped -----------------------
-            bool stopTrkDet1 = (stopPPSArmFTrkDet1==0 && stopPPSArmBTrkDet1 ==0);
-            bool stopTrkDet2 = (stopPPSArmFTrkDet2==0 && stopPPSArmBTrkDet2 ==0);
-            if(verbose)cout<<"stopTrkDet1:"<<stopTrkDet1<<" , "<<"stopTrkDet2:"<<stopTrkDet2<<endl;
-            if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
-                if(stopTrkDet1 && stopTrkDet2){ 
-                    hPPS_xVsy_ARMPlusDt1->Fill(xPPSArmFDet1,yPPSArmFDet1);
-                    hPPS_xVsy_ARMPlusDt2->Fill(xPPSArmFDet2,yPPSArmFDet2); 
-                    hPPS_xVsy_ARMMinusDt1->Fill(xPPSArmBDet1,yPPSArmBDet1);
-                    hPPS_xVsy_ARMMinusDt2->Fill(xPPSArmBDet2,yPPSArmBDet2);
-                    //--------- PPS xi ----------------------------
-                    if(xiPPSArmF>0.0 && xiPPSArmB>0.0){
+        if (CandidatesJets_pt->size()<2)continue;
+        if(verbose)cout<<"CandidatesJets_pt->size ="<<CandidatesJets_pt->size()<<endl;
 
-                        hPPS_xiARMPlus->Fill(xiPPSArmF);
-                        hPPS_xiARMMinus->Fill(xiPPSArmB);
-                        MxPPS = S*sqrt(xiPPSArmF*xiPPSArmB);
-                        if(verbose)std::cout<<"xiPPSArmF="<< xiPPSArmF<<","<<"xiPPSArmB="<<xiPPSArmB<<", "<<"S= "<<S<<std::endl;
-                        if(verbose)std::cout<<"Mx = "<<sqrt(xiPPSArmF*xiPPSArmB)*S<<std::endl;
-                        MJJ = Mjj; 
-                        //--------------------------------------------
-                    } // xi cut
-                    hMx->Fill(MxPPS);
-                    hMjj->Fill(MJJ);
-                    hMxPPSvsMjj->Fill(MxPPS,MJJ);
-                } //stopTrk
-            } //x,y cut
+        if(CandidatesJets_pt->at(0)>pTmin && CandidatesJets_pt->at(1)>pTmin){
+            ++counter_jetpT;
 
+            if((CandidatesJets_eta->at(0)>etamin && CandidatesJets_eta->at(0)<etamax)&&(CandidatesJets_eta->at(1)>etamin && CandidatesJets_eta->at(1)<etamax)){
+                ++counter_jetEta;
+                //------- fill some Jets  histograms ------------------
+                hLeadingJetPt->Fill(CandidatesJets_pt->at(0));
+                hSecondJetPt->Fill(CandidatesJets_pt->at(1));
+                hLeadingJetEta->Fill(CandidatesJets_eta->at(0));
+                hSecondJetEta->Fill(CandidatesJets_eta->at(1));
+                hLeadingJetPhi->Fill(CandidatesJets_phi->at(0));
+                hSecondJetPhi->Fill(CandidatesJets_phi->at(1));
+                deltaeta = fabs(CandidatesJets_eta->at(0)-CandidatesJets_eta->at(1));
+                deltaphi = fabs(CandidatesJets_phi->at(0)-CandidatesJets_phi->at(1));
+                if (deltaphi> PI){deltaphi = 2.0*PI - deltaphi;}
+                hDeltaEtaJets->Fill(deltaeta);
+                hDeltaPhiJets->Fill(deltaphi);
+                hVertexZCMSPPS->Fill(GoldenVertexZ,VertexZPPS);        
+                hVertexZCMS->Fill(GoldenVertexZ);
+                hVertexZPPS->Fill(VertexZPPS);
+                //--------- PPS x vs y -----------------------
+                //x,det1 e det2 nos dois arms < - 3.1 e  > -23.1 mm
+                //y,det1 e det2 nos dois arms > -9 e < 9 mm
+                bool cutXdet1 = ((xmin<xPPSArmFDet1 && xPPSArmFDet1<xmax) && (xmin<xPPSArmBDet1 && xPPSArmBDet1<xmax));
+                bool cutXdet2 = ((xmin2<xPPSArmFDet2 && xPPSArmFDet2<xmax2) && (xmin2<xPPSArmBDet2  && xPPSArmBDet2<xmax2));
+                bool cutYdet1 = ((ymin<yPPSArmFDet1 && yPPSArmFDet1<ymax) && (ymin<yPPSArmBDet1 && yPPSArmBDet1<ymax));
+                bool cutYdet2 = ((ymin<yPPSArmFDet2 && yPPSArmFDet2<ymax) && (ymin<yPPSArmBDet2 &&  yPPSArmBDet2<ymax));
+                if(verbose)std::cout<<"Xdet1:" <<cutXdet1<<"Xdet2:"<<cutXdet2<<"Ydet1: "<<cutYdet1<<"Ydet2: "<<cutYdet2<<std::endl;
+                //--------- PPS HasStoped -----------------------
+                bool stopTrkDet1 = (stopPPSArmFTrkDet1==0 && stopPPSArmBTrkDet1 ==0);
+                bool stopTrkDet2 = (stopPPSArmFTrkDet2==0 && stopPPSArmBTrkDet2 ==0);
+                if(verbose)cout<<"stopTrkDet1:"<<stopTrkDet1<<" , "<<"stopTrkDet2:"<<stopTrkDet2<<endl;
+                // Mjj and Mx before PPS sel
+                if(xiPPSArmF>0.0 && xiPPSArmB>0.0){
+                    MxPPSBeforeCuts = S*sqrt(xiPPSArmF*xiPPSArmB);
+                    MJJBC = CandidatesMjj;
+                }
+                hMxBC->Fill(MxPPSBeforeCuts);
+                hMjjBC->Fill(MJJBC);                                                                                        
+                hMxPPSvsMjjBC->Fill(MxPPS,MJJ);
+                //PPS sel
+                if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
+                    ++counter_fiducial;
+                    if(verbose)cout<<"x: "<<xPPSArmFDet1<<", "<<xPPSArmBDet1<<", "<<xPPSArmBDet1<<", "<<xPPSArmBDet2<<endl;
+                    if(verbose)cout<<"y: "<<yPPSArmFDet1<<", "<<yPPSArmBDet1<<", "<<yPPSArmBDet1<<", "<<yPPSArmBDet2<<endl;  
+                    if(stopTrkDet1 && stopTrkDet2){
+                        ++counter_hasStoped;
+                        hPPS_xVsy_ARMPlusDt1->Fill(xPPSArmFDet1,yPPSArmFDet1);
+                        hPPS_xVsy_ARMPlusDt2->Fill(xPPSArmFDet2,yPPSArmFDet2); 
+                        hPPS_xVsy_ARMMinusDt1->Fill(xPPSArmBDet1,yPPSArmBDet1);
+                        hPPS_xVsy_ARMMinusDt2->Fill(xPPSArmBDet2,yPPSArmBDet2);
+                        //--------- PPS xi ----------------------------
+                        if(xiPPSArmF>0.0 && xiPPSArmB>0.0){
+                            ++counter_xiArms;
+                            hPPS_xiARMPlus->Fill(xiPPSArmF);
+                            hPPS_xiARMMinus->Fill(xiPPSArmB);
+                            MxPPS = S*sqrt(xiPPSArmF*xiPPSArmB);
+                            if(verbose)std::cout<<"xiPPSArmF="<< xiPPSArmF<<","<<"xiPPSArmB="<<xiPPSArmB<<", "<<"S= "<<S<<std::endl;
+                            if(verbose)std::cout<<"Mx = "<<sqrt(xiPPSArmF*xiPPSArmB)*S<<std::endl;
+                            MJJ = CandidatesMjj; 
+                            hLeadingJetPtAfterPPS->Fill(CandidatesJets_pt->at(0));
+                            hSecondJetPtAfterPPS->Fill(CandidatesJets_pt->at(1));
+                            hLeadingJetEtaAfterPPS->Fill(CandidatesJets_eta->at(0));
+                            hSecondJetEtaAfterPPS->Fill(CandidatesJets_eta->at(1));
+                            hLeadingJetPhiAfterPPS->Fill(CandidatesJets_phi->at(0));
+                            hSecondJetPhiAfterPPS->Fill(CandidatesJets_phi->at(1));
+                            hDeltaEtaJetsAfterPPS->Fill(deltaeta);
+                            hDeltaPhiJetsAfterPPS->Fill(deltaphi);
+                            //--------------------------------------------
+                        } // xi cut
+                        hMx->Fill(MxPPS);
+                        hMjj->Fill(MJJ);
+                        hMxPPSvsMjj->Fill(MxPPS,MJJ);
+                    } //stopTrk
+                } //x,y cut
+            }//eta jet cuts
         }  //jet pt cut
 
     }// tree loop
     //----------------- print out some information ---------------
     cout<<"Events read:                      "<<NEVENTS<<endl;
+    cout<<"Events after jetpT:               "<<counter_jetpT<<endl;
+    cout<<"Events after jetEta:              "<<counter_jetEta<<endl; 
+    cout<<"Events after fiducial:            "<<counter_fiducial<<endl; 
+    cout<<"Events after hasStoped:           "<<counter_hasStoped<<endl; 
+    cout<<"Events after XiArms>0:            "<<counter_xiArms<<endl; 
     //----------------- save the histos to the output file ------
     outf->Write();
 }
