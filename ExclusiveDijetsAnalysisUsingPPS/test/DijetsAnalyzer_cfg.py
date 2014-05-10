@@ -31,7 +31,9 @@ process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
                                pTPFThresholdCharged = cms.double(0.1),
                                energyPFThresholdBar = cms.double(1.5),
                                energyPFThresholdEnd = cms.double(3.5),
-                               energyPFThresholdHF = cms.double(4.0)
+                               energyPFThresholdHF = cms.double(4.0),
+                               cmsVertexResolution = cms.double(0.2), #cm
+                               PPSVertexResolution = cms.double(0.2) #cm
                                )
 
 process.TFileService = cms.Service("TFileService",
