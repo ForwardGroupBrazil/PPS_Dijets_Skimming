@@ -59,6 +59,7 @@
 
 using namespace edm;
 using namespace std;
+using namespace HepMC;
 
 //
 // class declaration
@@ -89,8 +90,11 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     double energyPFThresholdBar_;
     double energyPFThresholdEnd_;
     double energyPFThresholdHF_;
+    double cmsVertexResolution_;
+    double PPSVertexResolution_;
 
     int indexGold;
+    int nAssociated=0;
     std::vector<const reco::PFJet*> JetsVector;
     std::vector<const reco::Vertex*> VertexVector;
     std::vector<const reco::Track*> TracksVector;
@@ -107,11 +111,24 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<double> JetsVector_phi;
     std::vector<double> PFVector_pt;
     std::vector<double> PFVector_eta;
+    std::vector<double> VertexCMSVectorX;
+    std::vector<double> VertexCMSVectorY;
     std::vector<double> VertexCMSVectorZ;
+    std::vector<double> VertexGENVectorX;
+    std::vector<double> VertexGENVectorY;
+    std::vector<double> VertexGENVectorZ;
     std::vector<int> TracksPerJetVector;
     std::vector<double> JetsSameVector_pt;
     std::vector<double> JetsSameVector_eta;
     std::vector<double> JetsSameVector_phi;
+    std::vector<math::XYZTLorentzVector> JetsSameVector_p4;
+    std::vector<double> CandidatesJets_pt;
+    std::vector<double> CandidatesJets_eta;
+    std::vector<double> CandidatesJets_phi;
+    std::vector<math::XYZTLorentzVector> CandidatesJets_p4;
+    double VertexGEN_x;
+    double VertexGEN_y;
+    double VertexGEN_z;
 
     TTree* eventTree_;
 
@@ -140,6 +157,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     double Mjj;
     double Mpf;
     double Rjj;
+    double CandidatesMjj;
 
 };
 
@@ -155,7 +173,9 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   pTPFThresholdCharged_(iConfig.getParameter<double>("pTPFThresholdCharged")),
   energyPFThresholdBar_(iConfig.getParameter<double>("energyPFThresholdBar")),
   energyPFThresholdEnd_(iConfig.getParameter<double>("energyPFThresholdEnd")),
-  energyPFThresholdHF_(iConfig.getParameter<double>("energyPFThresholdHF"))
+  energyPFThresholdHF_(iConfig.getParameter<double>("energyPFThresholdHF")),
+  cmsVertexResolution_(iConfig.getParameter<double>("cmsVertexResolution")),
+  PPSVertexResolution_(iConfig.getParameter<double>("PPSVertexResolution"))
 {
 
   edm::Service<TFileService> fs;
@@ -163,16 +183,24 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("JetsPt",&JetsVector_pt);
   eventTree_->Branch("JetsEta",&JetsVector_eta);
   eventTree_->Branch("JetsPhi",&JetsVector_phi);
-  eventTree_->Branch("TracksPerJet",&TracksPerJetVector);
-  eventTree_->Branch("PFCandidatePt",&PFVector_pt);
-  eventTree_->Branch("PFCandidateEta",&PFVector_eta);
-  eventTree_->Branch("VertexCMSVectorZ",&VertexCMSVectorZ);
   eventTree_->Branch("JetsSameVertex_pt",&JetsSameVector_pt);
   eventTree_->Branch("JetsSameVertex_eta",&JetsSameVector_eta);
   eventTree_->Branch("JetsSameVertex_phi",&JetsSameVector_phi);
   eventTree_->Branch("JetsSameVertex_x",&JetsSameVertex_x,"JetsSameVertex_x/D");
   eventTree_->Branch("JetsSameVertex_y",&JetsSameVertex_y,"JetsSameVertex_y/D");
   eventTree_->Branch("JetsSameVertex_z",&JetsSameVertex_z,"JetsSameVertex_z/D");
+  eventTree_->Branch("CandidatesJets_pt",&CandidatesJets_pt);
+  eventTree_->Branch("CandidatesJets_eta",&CandidatesJets_eta);
+  eventTree_->Branch("CandidatesJets_phi",&CandidatesJets_phi);
+  eventTree_->Branch("TracksPerJet",&TracksPerJetVector);
+  eventTree_->Branch("PFCandidatePt",&PFVector_pt);
+  eventTree_->Branch("PFCandidateEta",&PFVector_eta);
+  eventTree_->Branch("VertexCMSVector_x",&VertexCMSVectorX);
+  eventTree_->Branch("VertexCMSVector_y",&VertexCMSVectorY);
+  eventTree_->Branch("VertexCMSVector_z",&VertexCMSVectorZ);
+  eventTree_->Branch("VertexGENVector_x",&VertexGENVectorX);
+  eventTree_->Branch("VertexGENVector_y",&VertexGENVectorY);
+  eventTree_->Branch("VertexGENVector_z",&VertexGENVectorZ);
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
   eventTree_->Branch("nTracks",&nTracks,"nTracks/I");
   eventTree_->Branch("MinDistance",&MinDistance,"MinDistance/D");
@@ -204,6 +232,7 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("Mjj",&Mjj,"Mjj/D");
   eventTree_->Branch("Mpf",&Mpf,"Mpf/D");
   eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
+  eventTree_->Branch("CandidatesMjj",&CandidatesMjj,"CandidatesMjj/D");
 
 }
 
@@ -215,11 +244,15 @@ ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
 // ------------ method called once each job just before starting event loop  ------------
 void ExclusiveDijetsAnalysisUsingPPS::beginJob()
 {
+  cout << "\n--- P P S    C E P   A N A L Y Z E R---\n" << endl;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void ExclusiveDijetsAnalysisUsingPPS::endJob()
 {
+  cout << "\n--- S U M M A R Y---" << endl;
+  cout << "Number of Associated Vertex: " << nAssociated << endl;
+  cout << "\n--- E N D---\n" << endl;
 }
 
 // ------------ method called for each event  ------------
@@ -246,6 +279,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   JetsSameVector_pt.clear();
   JetsSameVector_eta.clear();
   JetsSameVector_phi.clear();
+  JetsSameVector_p4.clear();
   JetsSamePosition.clear();
   MinimumDistance.clear();
   PFJets.clear();
@@ -255,9 +289,18 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   JetsVector_phi.clear();
   PFVector_pt.clear();
   PFVector_eta.clear();
+  VertexCMSVectorX.clear();
+  VertexCMSVectorY.clear();
   VertexCMSVectorZ.clear();
+  VertexGENVectorX.clear();
+  VertexGENVectorY.clear();
+  VertexGENVectorZ.clear();
   JetVertex.clear();
   TracksPerJetVector.clear();
+  CandidatesJets_pt.clear();
+  CandidatesJets_eta.clear();
+  CandidatesJets_phi.clear();
+  CandidatesJets_p4.clear();
 
   JetsSameVertex_x = -999.;
   JetsSameVertex_y = -999.;
@@ -284,6 +327,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   Mpf= -999.;
   Rjj= -999.;
   VertexZPPS = -999.;
+  CandidatesMjj = -999.;
 
 }
 
@@ -537,12 +581,26 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
   for (unsigned int i=0;i<VertexVector.size();i++){
 
+    VertexCMSVectorX.push_back(VertexVector[i]->x());
+    VertexCMSVectorY.push_back(VertexVector[i]->y());
     VertexCMSVectorZ.push_back(VertexVector[i]->z());
 
     if (ppsSpectrum->vtxZ.size() > 0){ 
       PPSCMSVertex.push_back(std::pair<double,double>(fabs(ppsSpectrum->vtxZ[0] - VertexVector[i]->z()), VertexVector[i]->z()));
     }else{
       PPSCMSVertex.clear();
+    }
+  }
+
+  // Fill GEN Vertex Info
+  Handle<PPSSpectrometer> ppsGEN;
+  iEvent.getByLabel("ppssim","PPSGen",ppsGEN);
+
+  if (ppsGEN->vtxZ.size() > 0){
+    for (unsigned int i=0;i<ppsGEN->vtxZ.size();i++){
+      VertexGENVectorX.push_back(ppsGEN->vtxX[i]);
+      VertexGENVectorY.push_back(ppsGEN->vtxY[i]);
+      VertexGENVectorZ.push_back(ppsGEN->vtxZ[i]);
     }
   }
 
@@ -677,8 +735,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     MaxDistance = MinimumDistance[sortMinVector[MinimumDistance.size()-1]];
   }
 
-  // A S S O C I A T I O N   O F   J E T S / V E R T E X
-
+  // A S S O C I A T I O N   O F   J E T S / V E R T E X`
   double vx_mean = -999.;
   double vy_mean = -999.;
   double vz_mean = -999.;
@@ -718,7 +775,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 
   }
 
-  if(JetsVector.size()>1 && VertexVector.size()>0){
+  if(JetsVector.size()>0 && VertexVector.size()>0){
 
     math::XYZVector coordleadingjet(JetVertex[0].X(),JetVertex[0].Y(),JetVertex[0].Z());
     JetsSamePosition.push_back(coordleadingjet);
@@ -737,21 +794,46 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 	cout << "<vx,vy,vz> [cm]: (" << JetVertex[i].X() << ", " << JetVertex[i].Y() << ", " << JetVertex[i].Z() << ")\n" << endl;
       }
 
-      if(fabs(JetVertex[0].Z()-JetVertex[i].Z()) < 0.01){
+      if(fabs(JetVertex[0].Z()-JetVertex[i].Z()) < cmsVertexResolution_){
 	math::XYZVector coordjets(JetVertex[i].X(),JetVertex[i].Y(),JetVertex[i].Z());
 	JetsSamePosition.push_back(coordjets);
 	JetsSameVector_pt.push_back(JetsVector[i]->pt());
 	JetsSameVector_eta.push_back(JetsVector[i]->eta());
 	JetsSameVector_phi.push_back(JetsVector[i]->phi());
+	JetsSameVector_p4.push_back(JetsVector[i]->p4());
       }
 
     }
   }
 
+  // Getting at least Dijets Events
   if(JetsSameVector_pt.size()>1){
+
     for(unsigned int i=0;i<JetsSameVector_pt.size();i++){
       if (debug) cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) cm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [cm]: " << VertexZPPS << endl;
+
+      // Fill at least one jet from the same PPS/CMS associated vertex
+      if(fabs(JetsSamePosition[0].Z() - VertexZPPS) < PPSVertexResolution_){
+	CandidatesJets_pt.push_back(JetsSameVector_pt[i]);
+	CandidatesJets_eta.push_back(JetsSameVector_eta[i]);
+	CandidatesJets_phi.push_back(JetsSameVector_phi[i]);
+	CandidatesJets_p4.push_back(JetsSameVector_p4[i]);
+      }
     }
+
+    // Counter Number of Associated Events CMS/PPS Vertex
+    if(fabs(JetsSamePosition[0].Z() - VertexZPPS) < PPSVertexResolution_){
+      ++nAssociated;
+    }
+
+  }
+
+  // Fill Mjj leading dijets from candidate CMS/PPS associated vertex
+  if(CandidatesJets_p4.size()>1){
+    math::XYZTLorentzVector dijetSystemCand(0.,0.,0.,0.);
+    dijetSystemCand += CandidatesJets_p4[0];
+    dijetSystemCand += CandidatesJets_p4[1];
+    CandidatesMjj = dijetSystemCand.M();
   }
 
 }
