@@ -61,6 +61,8 @@ using namespace edm;
 using namespace std;
 using namespace HepMC;
 
+#define NELEMS(x)  (sizeof(x) / sizeof(x[0]));
+
 //
 // class declaration
 //
@@ -82,9 +84,12 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     void FillCollections(const edm::Event&, const edm::EventSetup&, bool debug);
     void SortingObjects(const edm::Event&, const edm::EventSetup&, bool debug);
     void AssociateJetsWithVertex(const edm::Event&, const edm::EventSetup&, bool debug);
+    void ResolutionStudies(bool debug);
 
+    bool MakePlots_;
     edm::InputTag jetTag_;
     edm::InputTag particleFlowTag_;
+    edm::InputTag VertexTag_;
     std::string ppsTag_;
     double pTPFThresholdCharged_;
     double energyPFThresholdBar_;
@@ -117,6 +122,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<double> VertexGENVectorX;
     std::vector<double> VertexGENVectorY;
     std::vector<double> VertexGENVectorZ;
+    std::vector<double> AllDiffVertexVector;
     std::vector<int> TracksPerJetVector;
     std::vector<double> JetsSameVector_pt;
     std::vector<double> JetsSameVector_eta;
@@ -158,6 +164,13 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     double Mpf;
     double Rjj;
     double CandidatesMjj;
+    double MinDistanceZVertex;
+    double MaxDistanceZVertex;
+
+    double resol[18]={0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5};
+    int counter[18]={0};
+    int size_resol = NELEMS(resol);
+    TH2D *h_vertex;
 
 };
 
@@ -167,8 +180,10 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 //
 
 ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet& iConfig):
+  MakePlots_(iConfig.getParameter<bool>("MakePlots")),
   jetTag_(iConfig.getParameter<edm::InputTag>("JetTag")),
   particleFlowTag_(iConfig.getParameter<edm::InputTag>("ParticleFlowTag")),
+  VertexTag_(iConfig.getParameter<edm::InputTag>("VertexTag")),
   ppsTag_(iConfig.getUntrackedParameter<std::string>("PPSTag","PPSReco")),
   pTPFThresholdCharged_(iConfig.getParameter<double>("pTPFThresholdCharged")),
   energyPFThresholdBar_(iConfig.getParameter<double>("energyPFThresholdBar")),
@@ -201,6 +216,9 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("VertexGENVector_x",&VertexGENVectorX);
   eventTree_->Branch("VertexGENVector_y",&VertexGENVectorY);
   eventTree_->Branch("VertexGENVector_z",&VertexGENVectorZ);
+  eventTree_->Branch("AllDiffVertexZVector",&AllDiffVertexVector);
+  eventTree_->Branch("MinDistanceZVertex",&MinDistanceZVertex,"MinDistanceZVertex/D");
+  eventTree_->Branch("MaxDistanceZVertex",&MaxDistanceZVertex,"MaxDistanceZVertex/D");
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
   eventTree_->Branch("nTracks",&nTracks,"nTracks/I");
   eventTree_->Branch("MinDistance",&MinDistance,"MinDistance/D");
@@ -234,6 +252,11 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
   eventTree_->Branch("CandidatesMjj",&CandidatesMjj,"CandidatesMjj/D");
 
+  if(MakePlots_){
+    TFileDirectory Dir = fs->mkdir("Info");
+    h_vertex = Dir.make<TH2D>("vertex", "Vertex; #sigma_{resolution, PV}; Number of Events", 17, resol, 1000, 0., 1000.);
+  }
+
 }
 
 ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
@@ -250,9 +273,21 @@ void ExclusiveDijetsAnalysisUsingPPS::beginJob()
 // ------------ method called once each job just after ending the event loop  ------------
 void ExclusiveDijetsAnalysisUsingPPS::endJob()
 {
+
+  bool debug = false;
+
   cout << "\n--- S U M M A R Y---" << endl;
   cout << "Number of Associated Vertex: " << nAssociated << endl;
+
+  if(MakePlots_) {
+    for (int i=0; i<size_resol; i++){
+      h_vertex->Fill(resol[i],counter[i]);
+      if (debug) cout << "Resolution PPS: " << resol[i] << " | # Events: " << counter[i] << endl;
+    }
+  }
+
   cout << "\n--- E N D---\n" << endl;
+
 }
 
 // ------------ method called for each event  ------------
@@ -262,6 +297,7 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
   FillCollections(iEvent, iSetup, false); //true-> Print Outputs and Golden Vertex (PPS and CMS). False-> No print screen.
   SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
+  ResolutionStudies(false); //true-> Print Ordered Vertex and Check Vertices.
   eventTree_->Fill();
 
 }
@@ -283,6 +319,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   JetsSamePosition.clear();
   MinimumDistance.clear();
   PFJets.clear();
+  AllDiffVertexVector.clear();
 
   JetsVector_pt.clear();
   JetsVector_eta.clear();
@@ -328,6 +365,8 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   Rjj= -999.;
   VertexZPPS = -999.;
   CandidatesMjj = -999.;
+  MaxDistanceZVertex = -999.;
+  MaxDistanceZVertex = -999.;
 
 }
 
@@ -341,7 +380,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
   // Fill Vertex
   Handle<edm::View<reco::Vertex> > vertex;
-  iEvent.getByLabel("offlinePrimaryVertices", vertex);
+  iEvent.getByLabel(VertexTag_, vertex);
 
   int vertexsize = vertex->size();
   int itVertex;
@@ -826,6 +865,13 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
       ++nAssociated;
     }
 
+    for(int i=0; i < size_resol; i++){
+      // Resolution Studies
+      if(fabs(JetsSamePosition[0].Z() - VertexZPPS) < resol[i]){
+	counter[i]++;
+      }
+    }
+
   }
 
   // Fill Mjj leading dijets from candidate CMS/PPS associated vertex
@@ -837,6 +883,57 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
   }
 
 }
+
+void ExclusiveDijetsAnalysisUsingPPS::ResolutionStudies(bool debug){
+
+  // Put Vertex in order of Z.
+  const int VertexVectorSize = (int) VertexVector.size();
+  int *sortVertexVector= new int[VertexVectorSize];
+  double *vvertex = new double[VertexVectorSize];
+
+  for (int i=0; i<VertexVectorSize; i++) {
+    vvertex[i] = VertexVector[i]->z();
+  }
+
+  TMath::Sort(VertexVectorSize, vvertex, sortVertexVector, true);
+
+  const int  size = (int) VertexVector.size();
+
+  if(VertexVector.size()>1){
+    for (int i=0; i<(size-1); i++) {
+      AllDiffVertexVector.push_back(fabs(VertexVector[sortVertexVector[i+1]]->z()-VertexVector[sortVertexVector[i]]->z()));
+    }
+  }
+
+  // see neighboring.
+  if(VertexVector.size()>0){
+    for(unsigned int i=0;i<VertexVector.size();i++){
+      if(debug) cout << "Vertex Ordered Z [cm]: " <<  VertexVector[sortVertexVector[i]]->z() << endl;
+    }
+  }
+
+  // Distances between neighboring vertexes
+  if(AllDiffVertexVector.size()>1){
+    for(unsigned int i=0;i<AllDiffVertexVector.size();i++){
+      if(debug) cout << "Difference Vertex Z [cm]: " <<  AllDiffVertexVector[i] << endl;
+    }
+  }
+
+  // Sorting | Vertex_PPS_z - Vertex_CMS_z |
+  stable_sort(AllDiffVertexVector.begin(), AllDiffVertexVector.end());
+
+  if(AllDiffVertexVector.size()>1){
+    for(unsigned int i=0;i<AllDiffVertexVector.size();i++){
+      if(debug) cout << "Ordered Difference Vertex Z [cm]: " <<  AllDiffVertexVector[i] << endl;
+    }
+
+    MinDistanceZVertex = AllDiffVertexVector[0];
+    MaxDistanceZVertex = AllDiffVertexVector[AllDiffVertexVector.size()-1];
+
+  }
+
+}
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExclusiveDijetsAnalysisUsingPPS);
