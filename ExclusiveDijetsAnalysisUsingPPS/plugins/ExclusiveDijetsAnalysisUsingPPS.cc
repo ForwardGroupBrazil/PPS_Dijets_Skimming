@@ -285,12 +285,12 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
   cout << "Number of Selected Events non associated, but jets selection: " << checkCounter << endl;
   cout << "Number of Selected Events, with Jet Selection: " << CheckCounterAssociator << endl;
 
-    if(MakePlots_) {
-      for (int i=0; i<size_resol; i++){
-	h_vertex->Fill(resol[i],counter[i]);
-	if (debug) cout << "Resolution PPS: " << resol[i] << " | # Events: " << counter[i] << endl;
-      }
+  if(MakePlots_) {
+    for (int i=0; i<size_resol; i++){
+      h_vertex->Fill(resol[i],counter[i]);
+      if (debug) cout << "Resolution PPS: " << resol[i] << " | # Events: " << counter[i] << endl;
     }
+  }
 
   cout << "\n--- E N D---\n" << endl;
 
@@ -798,10 +798,15 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     reco::TrackRefVector tracks = pfjet->getTrackRefs();
 
     if (debugdeep){
-      cout << "-- Info Jet[" << k << "] | Jet pT[GeV]: " << pfjet->pt() << "#Tracks per jet: " << tracks.size() <<  endl; 
+      cout << "-- Info Jet[" << k << "] | Jet pT[GeV]: " << pfjet->pt() << " | Tracks per jet: " << tracks.size() <<  endl; 
     }
 
+    int checktrack = 0;
     for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
+
+      if(checktrack > 3) break;
+      ++checktrack;
+
       pt2 += (*itTrack)->pt()*(*itTrack)->pt();
       pt2_x += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vx();
       pt2_y += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vy();
