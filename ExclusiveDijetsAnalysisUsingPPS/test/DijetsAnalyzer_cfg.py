@@ -93,6 +93,7 @@ if MCNOPU:
       )
    )
 
+
 # Adding Good Primary Vertex
 from PhysicsTools.SelectorUtils.pvSelector_cfi import pvSelector
 process.goodOfflinePrimaryVertices = cms.EDFilter(
@@ -108,11 +109,11 @@ process.ak5JetTracksAssociatorAtVertex = cms.EDProducer("JetTracksAssociatorAtVe
                                                          coneSize = cms.double(0.5)
                                                        )
 
+
 # EDAnalyzer Parameters
 process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
                                MakePlots = cms.bool(True),
-			       JetTag = cms.InputTag("ak5PFJets"),
-                               #JetTag = cms.InputTag("AK5PFchs"), #Testing
+                               JetTag = cms.InputTag("ak5PFJetsCHS"),
 			       ParticleFlowTag = cms.InputTag("particleFlow"),
                                VertexTag = cms.InputTag("goodOfflinePrimaryVertices"),
 			       PPSTag = cms.untracked.string("PPSReco"),
@@ -131,3 +132,4 @@ process.TFileService = cms.Service("TFileService",
 
 # Path, Run modules in order.
 process.p = cms.Path(process.goodOfflinePrimaryVertices*process.ak5JetTracksAssociatorAtVertex*process.demo)
+
