@@ -15,7 +15,7 @@ Example:
 cmsRun DijetsAnalyzer_cfg.py Run=MC_NO_PU
 
 Optional arguments:
-Run = MC_PU or MC_NO_PU
+Run = MC_OOT_PU, MC_NO_OOT_PU or MC_NO_OOT_PU
 
 Authors: Brazilian/PPS Group
 '''
@@ -28,7 +28,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 
 # Setting Input Parameters from Line Command
 options = VarParsing ('analysis')
-options.register('Run','MC_OOT_PU',VarParsing.multiplicity.singleton, VarParsing.varType.string,"Option to Run: MC with or not PU")
+options.register('Run','MC_NO_OOT_PU',VarParsing.multiplicity.singleton, VarParsing.varType.string,"Option to Run: MC with or not PU")
 options.parseArguments()
 
 # Some Variables
