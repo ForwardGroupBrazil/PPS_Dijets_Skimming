@@ -85,6 +85,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     void SortingObjects(const edm::Event&, const edm::EventSetup&, bool debug);
     void AssociateJetsWithVertex(const edm::Event&, const edm::EventSetup&, bool debug);
     void ResolutionStudies(bool debug);
+    void CheckSelection();
 
     bool MakePlots_;
     edm::InputTag jetTag_;
@@ -100,6 +101,9 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 
     int indexGold;
     int nAssociated=0;
+    int checkCounter=0;
+    int CheckCounterAssociator=0;
+
     std::vector<const reco::PFJet*> JetsVector;
     std::vector<const reco::Vertex*> VertexVector;
     std::vector<const reco::Track*> TracksVector;
@@ -278,13 +282,15 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
 
   cout << "\n--- S U M M A R Y---" << endl;
   cout << "Number of Associated Vertex: " << nAssociated << endl;
+  cout << "Number of Selected Events non associated, but jets selection: " << checkCounter << endl;
+  cout << "Number of Selected Events, with Jet Selection: " << CheckCounterAssociator << endl;
 
-  if(MakePlots_) {
-    for (int i=0; i<size_resol; i++){
-      h_vertex->Fill(resol[i],counter[i]);
-      if (debug) cout << "Resolution PPS: " << resol[i] << " | # Events: " << counter[i] << endl;
+    if(MakePlots_) {
+      for (int i=0; i<size_resol; i++){
+	h_vertex->Fill(resol[i],counter[i]);
+	if (debug) cout << "Resolution PPS: " << resol[i] << " | # Events: " << counter[i] << endl;
+      }
     }
-  }
 
   cout << "\n--- E N D---\n" << endl;
 
@@ -298,6 +304,7 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
   SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   ResolutionStudies(false); //true-> Print Ordered Vertex and Check Vertices.
+  CheckSelection();
   eventTree_->Fill();
 
 }
@@ -790,7 +797,9 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     const reco::PFJet* pfjet = &(pfJetCollection->at(k));
     reco::TrackRefVector tracks = pfjet->getTrackRefs();
 
-    if (debug) cout << "#Tracks per jet: " << tracks.size() << " | Jet pT[GeV]: " << pfjet->pt() << endl;
+    if (debugdeep){
+      cout << "-- Info Jet[" << k << "] | Jet pT[GeV]: " << pfjet->pt() << "#Tracks per jet: " << tracks.size() <<  endl; 
+    }
 
     for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
       pt2 += (*itTrack)->pt()*(*itTrack)->pt();
@@ -934,6 +943,39 @@ void ExclusiveDijetsAnalysisUsingPPS::ResolutionStudies(bool debug){
 
 }
 
+void ExclusiveDijetsAnalysisUsingPPS::CheckSelection(){
+
+  double xmax = -3.15;
+  double xmin = -23.15;
+  double xmax2 = -2.03;
+  double xmin2 = -22.03;
+  double ymax = 9.0;
+  double ymin = -9.0;
+
+  bool cutXdet1 = ((xmin<xPPSArmFDet1 && xPPSArmFDet1<xmax) && (xmin<xPPSArmBDet1 && xPPSArmBDet1<xmax));
+  bool cutXdet2 = ((xmin2<xPPSArmFDet2 && xPPSArmFDet2<xmax2) && (xmin2<xPPSArmBDet2 && xPPSArmBDet2<xmax2));
+  bool cutYdet1 = ((ymin<yPPSArmFDet1 && yPPSArmFDet1<ymax) && (ymin<yPPSArmBDet1 && yPPSArmBDet1<ymax));
+  bool cutYdet2 = ((ymin<yPPSArmFDet2 && yPPSArmFDet2<ymax) && (ymin<yPPSArmBDet2 && yPPSArmBDet2<ymax));
+
+  bool stopTrkDet1 = (stopPPSArmFTrkDet1==0 && stopPPSArmBTrkDet1 ==0);
+  bool stopTrkDet2 = (stopPPSArmFTrkDet2==0 && stopPPSArmBTrkDet2 ==0);
+
+  if(JetsVector.size()>1){
+    if(JetsVector_pt[0]>50. && JetsVector_pt[1]>50.){
+      if(JetsVector_eta[0]>-2. && JetsVector_eta[1]<2.){
+	if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
+	  if(stopTrkDet1 && stopTrkDet2){
+	    ++checkCounter;
+	    if(fabs(VertexVector[0]->z()-VertexZPPS)<0.2){
+	      ++CheckCounterAssociator;
+	    }
+	  }
+	}
+      }
+    }
+  }
+
+}
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExclusiveDijetsAnalysisUsingPPS);
