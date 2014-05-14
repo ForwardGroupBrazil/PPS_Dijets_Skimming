@@ -118,8 +118,6 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<double> JetsVector_pt;
     std::vector<double> JetsVector_eta;
     std::vector<double> JetsVector_phi;
-    std::vector<double> PFVector_pt;
-    std::vector<double> PFVector_eta;
     std::vector<double> VertexCMSVectorX;
     std::vector<double> VertexCMSVectorY;
     std::vector<double> VertexCMSVectorZ;
@@ -170,6 +168,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     double CandidatesMjj;
     double MinDistanceZVertex;
     double MaxDistanceZVertex;
+    bool acceptPrint = false;
 
     double resol[18]={0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5};
     int counter[18]={0};
@@ -212,8 +211,6 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("CandidatesJets_eta",&CandidatesJets_eta);
   eventTree_->Branch("CandidatesJets_phi",&CandidatesJets_phi);
   eventTree_->Branch("TracksPerJet",&TracksPerJetVector);
-  eventTree_->Branch("PFCandidatePt",&PFVector_pt);
-  eventTree_->Branch("PFCandidateEta",&PFVector_eta);
   eventTree_->Branch("VertexCMSVector_x",&VertexCMSVectorX);
   eventTree_->Branch("VertexCMSVector_y",&VertexCMSVectorY);
   eventTree_->Branch("VertexCMSVector_z",&VertexCMSVectorZ);
@@ -281,9 +278,11 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
   bool debug = false;
 
   cout << "\n--- S U M M A R Y---" << endl;
-  cout << "Number of Associated Vertex: " << nAssociated << endl;
-  cout << "Number of Selected Events non associated, but jets selection: " << checkCounter << endl;
-  cout << "Number of Selected Events, with Jet Selection: " << CheckCounterAssociator << endl;
+  cout << "# evt (Associated Vertex, full algorithm): " << nAssociated << endl;
+  if(acceptPrint){
+    cout << "# evt (LeadingJets_pT >50 GeV & Jets at Tracker & Fiducial PPS): " << checkCounter << endl;
+    cout << "# evt (LeadingJets_pT >50 GeV & Jets at Tracker & Fiducial PPS & PPS/CMS Vertex): " << CheckCounterAssociator << endl;
+  }
 
   if(MakePlots_) {
     for (int i=0; i<size_resol; i++){
@@ -304,7 +303,7 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
   SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   ResolutionStudies(false); //true-> Print Ordered Vertex and Check Vertices.
-  CheckSelection();
+  CheckSelection(); // Check Algorithm.
   eventTree_->Fill();
 
 }
@@ -331,8 +330,6 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   JetsVector_pt.clear();
   JetsVector_eta.clear();
   JetsVector_phi.clear();
-  PFVector_pt.clear();
-  PFVector_eta.clear();
   VertexCMSVectorX.clear();
   VertexCMSVectorY.clear();
   VertexCMSVectorZ.clear();
@@ -682,16 +679,7 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
   bool debugdetails = false;
 
 
-  // Fill PF Vectors
-  if(PFVector.size()>0){
-    for (unsigned int i=0;i<PFVector.size();i++){
-      PFVector_pt.push_back(PFVector[i]->pt());
-      PFVector_eta.push_back(PFVector[i]->eta());
-    }
-  }
-
   // Ordering Jets by pT and Fill Jet Vectors
-
   if(JetsVector.size()>0){
 
     const int JetsVectorSize = (int) JetsVector.size();
@@ -736,6 +724,7 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
       dijetSystem += JetsVector[sortJetsVector[1]]->p4();
       Mjj = dijetSystem.M();
     }
+
   }
 
   if ( (Mjj > 0.) && (Mpf > 0.)){
@@ -804,6 +793,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     int checktrack = 0;
     for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
 
+      // Only three tracks
       if(checktrack > 3) break;
       ++checktrack;
 
@@ -835,6 +825,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     JetsSameVector_pt.push_back(JetsVector[0]->pt());
     JetsSameVector_eta.push_back(JetsVector[0]->eta());
     JetsSameVector_phi.push_back(JetsVector[0]->phi());
+    JetsSameVector_p4.push_back(JetsVector[0]->p4());
 
     JetsSameVertex_x = JetVertex[0].X();
     JetsSameVertex_y = JetVertex[0].Y();
@@ -950,6 +941,8 @@ void ExclusiveDijetsAnalysisUsingPPS::ResolutionStudies(bool debug){
 
 void ExclusiveDijetsAnalysisUsingPPS::CheckSelection(){
 
+  acceptPrint = true;
+
   double xmax = -3.15;
   double xmin = -23.15;
   double xmax2 = -2.03;
@@ -971,7 +964,7 @@ void ExclusiveDijetsAnalysisUsingPPS::CheckSelection(){
 	if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
 	  if(stopTrkDet1 && stopTrkDet2){
 	    ++checkCounter;
-	    if(fabs(VertexVector[0]->z()-VertexZPPS)<0.2){
+	    if(fabs(VertexVector[0]->z()-VertexZPPS)<PPSVertexResolution_){
 	      ++CheckCounterAssociator;
 	    }
 	  }
