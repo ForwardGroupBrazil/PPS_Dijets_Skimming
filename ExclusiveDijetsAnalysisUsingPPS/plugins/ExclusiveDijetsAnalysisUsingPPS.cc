@@ -85,7 +85,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     void SortingObjects(const edm::Event&, const edm::EventSetup&, bool debug);
     void AssociateJetsWithVertex(const edm::Event&, const edm::EventSetup&, bool debug);
     void ResolutionStudies(bool debug);
-    void CheckSelection();
+    void PPSSelection();
 
     bool MakePlots_;
     edm::InputTag jetTag_;
@@ -98,6 +98,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     double energyPFThresholdHF_;
     double cmsVertexResolution_;
     double PPSVertexResolution_;
+    double EBeam_;
 
     int indexGold;
     int nAssociated=0;
@@ -169,6 +170,8 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     double MinDistanceZVertex;
     double MaxDistanceZVertex;
     bool acceptPrint = false;
+    double Mx;
+    bool FiducialCut = false;
 
     double resol[18]={0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5};
     int counter[18]={0};
@@ -193,7 +196,8 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   energyPFThresholdEnd_(iConfig.getParameter<double>("energyPFThresholdEnd")),
   energyPFThresholdHF_(iConfig.getParameter<double>("energyPFThresholdHF")),
   cmsVertexResolution_(iConfig.getParameter<double>("cmsVertexResolution")),
-  PPSVertexResolution_(iConfig.getParameter<double>("PPSVertexResolution"))
+  PPSVertexResolution_(iConfig.getParameter<double>("PPSVertexResolution")),
+  EBeam_(iConfig.getParameter<double>("EBeam"))
 {
 
   edm::Service<TFileService> fs;
@@ -252,6 +256,8 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("Mpf",&Mpf,"Mpf/D");
   eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
   eventTree_->Branch("CandidatesMjj",&CandidatesMjj,"CandidatesMjj/D");
+  eventTree_->Branch("Mx",&Mx,"Mx/D");
+  eventTree_->Branch("FiducialCut",&FiducialCut,"FiducialCut/B");
 
   if(MakePlots_){
     TFileDirectory Dir = fs->mkdir("Info");
@@ -303,7 +309,7 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
   SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
   ResolutionStudies(false); //true-> Print Ordered Vertex and Check Vertices.
-  CheckSelection(); // Check Algorithm.
+  PPSSelection(); // Check Algorithm.
   eventTree_->Fill();
 
 }
@@ -371,6 +377,8 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   CandidatesMjj = -999.;
   MaxDistanceZVertex = -999.;
   MaxDistanceZVertex = -999.;
+  Mx = -999.;
+  FiducialCut = false;
 
 }
 
@@ -541,6 +549,11 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   // PPS Vertex
   if(ppsSpectrum->vtxZ.size() > 0){
     VertexZPPS = ppsSpectrum->vtxZ[0];
+  }
+
+  // PPS Mx
+  if(ppsSpectrum->ArmF.xi[0] > 0. && ppsSpectrum->ArmB.xi[0] > 0.){
+    Mx = EBeam_*TMath::Sqrt(ppsSpectrum->ArmF.xi[0]*ppsSpectrum->ArmB.xi[0]);
   }
 
   if (debug){
@@ -939,10 +952,11 @@ void ExclusiveDijetsAnalysisUsingPPS::ResolutionStudies(bool debug){
 
 }
 
-void ExclusiveDijetsAnalysisUsingPPS::CheckSelection(){
+void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
 
   acceptPrint = true;
 
+  // Fiducial Cuts
   double xmax = -3.15;
   double xmin = -23.15;
   double xmax2 = -2.03;
@@ -958,6 +972,7 @@ void ExclusiveDijetsAnalysisUsingPPS::CheckSelection(){
   bool stopTrkDet1 = (stopPPSArmFTrkDet1==0 && stopPPSArmBTrkDet1 ==0);
   bool stopTrkDet2 = (stopPPSArmFTrkDet2==0 && stopPPSArmBTrkDet2 ==0);
 
+  // Check Some Selectiona
   if(JetsVector.size()>1){
     if(JetsVector_pt[0]>50. && JetsVector_pt[1]>50.){
       if(JetsVector_eta[0]>-2. && JetsVector_eta[1]<2.){
@@ -970,6 +985,13 @@ void ExclusiveDijetsAnalysisUsingPPS::CheckSelection(){
 	  }
 	}
       }
+    }
+  }
+
+  // Applying PPS Fiducial if Requested
+  if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
+    if(stopTrkDet1 && stopTrkDet2){
+      FiducialCut = true;
     }
   }
 
