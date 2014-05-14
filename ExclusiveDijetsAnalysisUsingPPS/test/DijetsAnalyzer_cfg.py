@@ -145,7 +145,8 @@ process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
                                energyPFThresholdEnd = cms.double(3.5),
                                energyPFThresholdHF = cms.double(4.0),
                                cmsVertexResolution = cms.double(0.2), #cm
-                               PPSVertexResolution = cms.double(0.2) #cm
+                               PPSVertexResolution = cms.double(0.2), #cm
+                               EBeam = cms.double(13000.)
                                )
 
 # TFileService
