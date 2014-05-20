@@ -112,7 +112,8 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     std::vector<const PPSSpectrometer*> PPSSpecVector;
     std::vector< std::pair<double,double> > PPSCMSVertex;
     std::vector<const reco::PFJet*> PFJets;
-    std::vector<double> MinimumDistance;   
+    std::vector<double> MinimumDistance;
+    std::vector<double> DistanceBetweenJets;   
     std::vector< math::XYZVector > JetVertex;
     std::vector< math::XYZVector > JetsSamePosition;
 
@@ -222,6 +223,7 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("VertexGENVector_y",&VertexGENVectorY);
   eventTree_->Branch("VertexGENVector_z",&VertexGENVectorZ);
   eventTree_->Branch("AllDiffVertexZVector",&AllDiffVertexVector);
+  eventTree_->Branch("AllDiffVertexZVector",&DistanceBetweenJets);
   eventTree_->Branch("MinDistanceZVertex",&MinDistanceZVertex,"MinDistanceZVertex/D");
   eventTree_->Branch("MaxDistanceZVertex",&MaxDistanceZVertex,"MaxDistanceZVertex/D");
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
@@ -332,6 +334,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   MinimumDistance.clear();
   PFJets.clear();
   AllDiffVertexVector.clear();
+  DistanceBetweenJets.clear();
 
   JetsVector_pt.clear();
   JetsVector_eta.clear();
@@ -850,6 +853,8 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 	cout << "\nJet pT: " << JetsVector[i]->pt() <<endl;
 	cout << "<vx,vy,vz> [cm]: (" << JetVertex[i].X() << ", " << JetVertex[i].Y() << ", " << JetVertex[i].Z() << ")\n" << endl;
       }
+
+      DistanceBetweenJets.push_back(fabs(JetVertex[0].Z()-JetVertex[i].Z()));      
 
       if(fabs(JetVertex[0].Z()-JetVertex[i].Z()) < cmsVertexResolution_){
 	math::XYZVector coordjets(JetVertex[i].X(),JetVertex[i].Y(),JetVertex[i].Z());
