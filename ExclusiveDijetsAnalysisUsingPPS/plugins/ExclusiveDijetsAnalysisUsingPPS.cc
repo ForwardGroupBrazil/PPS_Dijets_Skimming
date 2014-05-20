@@ -223,7 +223,7 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("VertexGENVector_y",&VertexGENVectorY);
   eventTree_->Branch("VertexGENVector_z",&VertexGENVectorZ);
   eventTree_->Branch("AllDiffVertexZVector",&AllDiffVertexVector);
-  eventTree_->Branch("AllDiffVertexZVector",&DistanceBetweenJets);
+  eventTree_->Branch("DistanceBetweenJets",&DistanceBetweenJets);
   eventTree_->Branch("MinDistanceZVertex",&MinDistanceZVertex,"MinDistanceZVertex/D");
   eventTree_->Branch("MaxDistanceZVertex",&MaxDistanceZVertex,"MaxDistanceZVertex/D");
   eventTree_->Branch("nVertex",&nVertex,"nVertex/I");
