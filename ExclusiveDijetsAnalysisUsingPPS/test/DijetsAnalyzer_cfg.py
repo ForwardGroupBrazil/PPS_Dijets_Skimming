@@ -15,7 +15,7 @@ Example:
 cmsRun DijetsAnalyzer_cfg.py Run=MC_NO_PU
 
 Optional arguments:
-Run = MC_OOT_PU, MC_NO_OOT_PU or MC_NO_OOT_PU
+Run = MC_OOT_PU, MC_NO_OOT_PU or MC_NO_OOT_NO_PU
 
 Authors: Brazilian/PPS Group
 '''
