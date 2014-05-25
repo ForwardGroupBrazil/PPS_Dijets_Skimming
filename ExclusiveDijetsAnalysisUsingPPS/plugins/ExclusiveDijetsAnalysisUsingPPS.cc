@@ -787,6 +787,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
   }
 
   // A S S O C I A T I O N   O F   J E T S / V E R T E X`
+ 
   double vx_mean = -999.;
   double vy_mean = -999.;
   double vz_mean = -999.;
@@ -798,6 +799,9 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
   edm::Handle<std::vector<reco::PFJet> > pfJetCollection;
   iEvent.getByLabel(jetTag_, pfJetCollection);
 
+  Handle<edm::View<reco::Vertex> > vertexCollection;
+  iEvent.getByLabel(VertexTag_, vertexCollection);
+
   for( unsigned k=0; k<pfJetCollection->size(); k++ ) {
     const reco::PFJet* pfjet = &(pfJetCollection->at(k));
     reco::TrackRefVector tracks = pfjet->getTrackRefs();
@@ -805,28 +809,74 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     if (debugdeep){
       cout << "-- Info Jet[" << k << "] | Jet pT[GeV]: " << pfjet->pt() << " | Tracks per jet: " << tracks.size() <<  endl; 
     }
+    // A.P.
+    if (debugdeep)
+      cout << "-- Primary vertex (x,y,z) [cm]: " << VertexVector[0]->x() << ", " << VertexVector[0]->y() << ", " << VertexVector[0]->z() <<  endl; 
 
+    vx_mean = -999.;
+    vy_mean = -999.;
+    vz_mean = -999.;
+    pt2_x = 0.;
+    pt2_y = 0.;
+    pt2_z = 0.;
+    pt2 = 0.;
     int checktrack = 0;
     for (reco::TrackRefVector::const_iterator itTrack = tracks.begin(); itTrack != tracks.end(); ++itTrack) {
 
+      // A.P.
+      // Check from which vertex track comes from
+      reco::TrackBaseRef trackBaseRef( *itTrack );
+      float bestweight = 0.;
+      int i_vtx_track = -1;
+
+      unsigned idx_vertex = 0;
+      edm::View<reco::Vertex>::const_iterator vertex = vertexCollection->begin();
+      edm::View<reco::Vertex>::const_iterator vertex_end = vertexCollection->end();
+      for(; vertex != vertex_end; ++vertex, ++idx_vertex){
+         reco::Vertex::trackRef_iterator it_trk = vertex->tracks_begin();
+         for(; it_trk != vertex->tracks_end(); ++it_trk){
+            const reco::TrackBaseRef& baseRef = *it_trk;
+            if( baseRef == trackBaseRef ) {
+               float w = vertex->trackWeight(baseRef);
+               if (w > bestweight){
+                  bestweight = w;
+                  i_vtx_track = idx_vertex;
+               }
+            }
+         } 
+      }
+
+      if( i_vtx_track == -1) continue;
+
       // Only three tracks
-      if(checktrack > 3) break;
       ++checktrack;
+      if(checktrack > 3) break;
 
       pt2 += (*itTrack)->pt()*(*itTrack)->pt();
       pt2_x += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vx();
       pt2_y += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vy();
       pt2_z += (*itTrack)->pt()*(*itTrack)->pt()*(*itTrack)->vz();
+
       if (debugdeep){
-	cout << "Track-> pT [GeV]: " << (*itTrack)->pt() << " | Eta: " << (*itTrack)->eta() << " | phi: " << (*itTrack)->phi() << " | Vertex Origin (x,y,z) [cm]: " << (*itTrack)->vx() << ", " << (*itTrack)->vy() << ", " << (*itTrack)->vz() << endl;  
+	cout << "Track-> pT [GeV]: " << (*itTrack)->pt() << " | Eta: " << (*itTrack)->eta() << " | phi: " << (*itTrack)->phi() << " | Vertex Origin (x,y,z) [cm]: " << (*itTrack)->vx() << ", " << (*itTrack)->vy() << ", " << (*itTrack)->vz() << " | offline vertex index: " << i_vtx_track << endl;  
       }
     }
 
+    // A.P.
+    if (debugdeep){
+       cout << "-- Jet pt2: " << pt2 << endl
+            << "   pt2_x, pt2_y, pt2_z: " << pt2_x << ", " << pt2_y << ", " << pt2_z << endl;
+    }
+               
     if (pt2 > 0.) {
       vx_mean = pt2_x/pt2;
       vy_mean = pt2_y/pt2;
       vz_mean = pt2_z/pt2;
     }
+
+    // A.P.
+    if (debugdeep)
+      cout << "-- Jet vertex (x,y,z) [cm]: " << vx_mean << ", " << vy_mean << ", " << vz_mean << endl; 
 
     math::XYZVector coord(vx_mean,vy_mean,vz_mean);
     JetVertex.push_back(coord);
