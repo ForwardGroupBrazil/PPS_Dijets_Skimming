@@ -206,6 +206,7 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("JetsPt",&JetsVector_pt);
   eventTree_->Branch("JetsEta",&JetsVector_eta);
   eventTree_->Branch("JetsPhi",&JetsVector_phi);
+  eventTree_->Branch("JetVertex",&JetVertex);
   eventTree_->Branch("JetsSameVertex_pt",&JetsSameVector_pt);
   eventTree_->Branch("JetsSameVertex_eta",&JetsSameVector_eta);
   eventTree_->Branch("JetsSameVertex_phi",&JetsSameVector_phi);
