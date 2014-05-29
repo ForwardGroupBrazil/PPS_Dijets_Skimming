@@ -27,7 +27,7 @@
 #include <cmath>
 #define PI 3.141592653589793
 using namespace std;
-Bool_t switchlumiweight = false;
+Bool_t switchlumiweight = true;
 void CEPDijetsPPS()
 {
     //------------ FWLite libraries ------
