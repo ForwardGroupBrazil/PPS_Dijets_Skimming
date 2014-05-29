@@ -35,6 +35,8 @@ options.parseArguments()
 MC_OOT_PU = False
 MC_NO_OOT_NO_PU = False
 MC_NO_OOT_PU = False
+jettag = "ak5PFJetsCHS" #ak5PFJets or ak5PFJetsCHS
+
 
 # Setting Code Options
 print("")
@@ -166,7 +168,7 @@ process.ak5JetTracksAssociatorAtVertex = cms.EDProducer("JetTracksAssociatorAtVe
 # EDAnalyzer Parameters
 process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
                                MakePlots = cms.bool(True),
-                               JetTag = cms.InputTag("ak5PFJetsCHS"),
+                               JetTag = cms.InputTag(jettag),
 			       ParticleFlowTag = cms.InputTag("particleFlow"),
                                VertexTag = cms.InputTag("goodOfflinePrimaryVertices"),
 			       PPSTag = cms.untracked.string("PPSReco"),
