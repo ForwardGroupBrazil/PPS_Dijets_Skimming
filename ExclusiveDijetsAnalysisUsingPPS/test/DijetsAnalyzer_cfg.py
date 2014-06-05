@@ -97,9 +97,19 @@ if MC_NO_OOT_NO_PU:
       duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
       fileNames = cms.untracked.vstring(
           'file:/storage2/polme/GG/GG_noOOT_noPU_1.root',
-          'file:/storage2/polme/GG/GG_noOOT_noPU_2.root',
-          'file:/storage2/polme/GG/GG_noOOT_noPU_3.root',
-          'file:/storage2/polme/GG/GG_noOOT_noPU_4.root'
+          'file:/storage2/polme/GG/GG_noOOT_noPU_10a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_10b.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_2a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_2b.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_3a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_3b.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_4.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_5.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_6.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_7.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_8.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_9a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_9b.root'
       )
    )
 
@@ -146,7 +156,17 @@ if MC_NO_OOT_PU:
           'file:/storage2/polme/GG/GG_noOOT_new_37.root',
           'file:/storage2/polme/GG/GG_noOOT_new_38.root',
           'file:/storage2/polme/GG/GG_noOOT_new_39.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_40.root'
+          'file:/storage2/polme/GG/GG_noOOT_new_40.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_41.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_42.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_43.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_44.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_45.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_46.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_47.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_48.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_49.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_50.root'
       )
    )
 
