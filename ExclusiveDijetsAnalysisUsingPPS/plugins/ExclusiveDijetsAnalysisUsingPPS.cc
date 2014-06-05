@@ -179,6 +179,49 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
     int size_resol = NELEMS(resol);
     TH2D *h_vertex;
 
+
+    // ToF detector
+
+    double deltaToF_00;
+    double deltaToF_0i;
+    double deltaToF_ii;
+
+
+    map<int,double> BeamX;
+    map<int,double> BeamY;
+    map<int,double> BeamX_RMS;
+    map<int,double> BeamY_RMS;
+    float ToFXPosSigma;
+
+
+    int ToFCellId(double x, double y);
+    void setToFGeometry(std::string);
+    void setQuartic();
+    //void setDiamond();
+    void setToFParameters(std::string geo,double xpos);
+    void setBeamParameters(int pos, double x,double y,double rms_x,double rms_y);
+
+    std::string ToFGeometryType="";
+    double      ToFXPos;
+    vector<pair<double,double> > ToFCellColumn;
+    vector<pair<double,double> > ToFCellRow;
+    const double RPWindowThickness=0.3;
+    const int   NYCell = 4; // number of cell in Y for Quartic
+    const int   NXCell = 5; // number of cell in X for Quartic
+    const int   NXCellLowerRow = 1; // number of cell in X for lower row for Diamond
+    const int   NXCellUpperRow = 1; // number of cell in X for upper row for Diamond
+    const int   NXCellCentralRow = 14; // number of cell in X for central row for Diamond
+    const int   DiamondNYCell = 3; // number of cell in Y for Diamond
+    const float celws[14]= {0.3, 0.4, 0.45, 0.55, 0.65, 0.75, 0.9, 1.0, 1.3, 1.7, 2, 2.4, 3, 4.6};
+    const float DiamondCellHeight = 5.;
+    const float QuarticCellHeight = 3.;
+    const float QuarticCellWidth = 3.;
+    const float DiamondUpperCellW = 10;
+    //const vector<float> DiamondCentralCellW(celws,0.3);
+    //const vector<float> DiamondCentralCellW(celws,celws + sizeof(celws) / sizeof(float));
+    const float DiamondLowerCellW = 10;
+
+
 };
 
 
@@ -261,6 +304,10 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
   eventTree_->Branch("CandidatesMjj",&CandidatesMjj,"CandidatesMjj/D");
   eventTree_->Branch("Mx",&Mx,"Mx/D");
   eventTree_->Branch("FiducialCut",&FiducialCut,"FiducialCut/B");
+  eventTree_->Branch("deltaToF_00",&deltaToF_00,"deltaToF_00/D");
+  eventTree_->Branch("deltaToF_0i",&deltaToF_0i,"deltaToF_0i/D");
+  eventTree_->Branch("deltaToF_ii",&deltaToF_ii,"deltaToF_ii/D");
+
 
   if(MakePlots_){
     TFileDirectory Dir = fs->mkdir("Info");
@@ -352,6 +399,10 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
   CandidatesJets_eta.clear();
   CandidatesJets_phi.clear();
   CandidatesJets_p4.clear();
+  deltaToF_00 = -999.;
+  deltaToF_0i = -999.;
+  deltaToF_ii = -999.;
+
 
   JetsSameVertex_x = -999.;
   JetsSameVertex_y = -999.;
@@ -392,7 +443,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 {
 
   // Debug Detailed Information, each loop
-  bool debugdetails = false;
+  bool debugdetails = true;
 
   // Fill Vertex
   Handle<edm::View<reco::Vertex> > vertex;
@@ -524,6 +575,39 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
     xPPSArmBToF = ppsSpectrum->ArmB.ToFDet.X[0];
     yPPSArmBToF = ppsSpectrum->ArmB.ToFDet.Y[0];
   }
+
+  // ArmF and ArmB, ToF vs ptLeading
+
+  //cout << "============== SETTING PPS BEAM PARAMETERS ==============" << endl;
+  setBeamParameters(1,0.00013,-0.00062,0.186,0.495);
+  setBeamParameters(2,-0.00020,0.00011,0.115,0.436);
+  setBeamParameters(3,-0.00011,-0.00258,0.113,0.419);
+  setToFParameters("Quartic",15);  //cout << " ---- Quartic --- " << endl;
+  if(ppsSpectrum->ArmB.ToFDet.HasStopped.size() > 0 && ppsSpectrum->ArmF.ToFDet.HasStopped.size() > 0){
+    unsigned int nhits =  ppsSpectrum->ArmB.ToFDet.NHits; 
+    //cout << " nhitsB = " <<  ppsSpectrum->ArmB.ToFDet.NHits<< " nhitsF = " <<  ppsSpectrum->ArmF.ToFDet.NHits << endl;
+    //cout << " XB = " <<  ppsSpectrum->ArmB.ToFDet.X.size() << " XF = " <<  ppsSpectrum->ArmF.ToFDet.X.size() << endl;
+    //cout << " YB = " <<  ppsSpectrum->ArmB.ToFDet.Y.size() << " YF = " <<  ppsSpectrum->ArmF.ToFDet.Y.size() << endl;
+    for (unsigned int iB=0;iB<nhits;iB++){
+      int cellIdB = ToFCellId(ppsSpectrum->ArmB.ToFDet.X.at(iB),ppsSpectrum->ArmB.ToFDet.Y.at(iB)); 
+      int cellIdF = ToFCellId(ppsSpectrum->ArmF.ToFDet.X.at(iB),ppsSpectrum->ArmF.ToFDet.Y.at(iB));
+      if(cellIdB==0 || cellIdF==0) continue;  
+      for (unsigned int iF=0;iF<nhits;iF++){
+	if(iB == 0 && iF == 0 && ppsSpectrum->ArmB.ToF.at(0) != 0 && ppsSpectrum->ArmF.ToF.at(0) != 0 ){ 
+	  deltaToF_00 = ppsSpectrum->ArmB.ToF[iB]-ppsSpectrum->ArmF.ToF[iF];  
+	  continue;
+	}
+	else if((iB==0&&iF > 0 && ppsSpectrum->ArmB.ToF.at(0) != 0 && ppsSpectrum->ArmF.ToF.at(iF) != 0 )|| (iB > 0 && iF == 0 && ppsSpectrum->ArmB.ToF.at(iB) != 0 && ppsSpectrum->ArmF.ToF.at(0) != 0 )) {	  
+	  deltaToF_0i=(ppsSpectrum->ArmB.ToF.at(iB)-ppsSpectrum->ArmF.ToF.at(iF)) ; 
+	  continue; 
+	}   
+	else if (iB > 0 && iF > 0 && ppsSpectrum->ArmB.ToF.at(iB) != 0 && ppsSpectrum->ArmF.ToF.at(iB) != 0 ) {	  
+	  deltaToF_ii=(ppsSpectrum->ArmB.ToF.at(iB)-ppsSpectrum->ArmF.ToF.at(iF));
+	  continue;
+	}   
+      }
+    }
+  } 
 
   // ArmF and ArmB, HasStopped Info
   if(ppsSpectrum->ArmF.ToFDet.HasStopped.size() > 0){
@@ -788,7 +872,7 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
   }
 
   // A S S O C I A T I O N   O F   J E T S / V E R T E X`
- 
+
   double vx_mean = -999.;
   double vy_mean = -999.;
   double vz_mean = -999.;
@@ -834,17 +918,17 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
       edm::View<reco::Vertex>::const_iterator vertex = vertexCollection->begin();
       edm::View<reco::Vertex>::const_iterator vertex_end = vertexCollection->end();
       for(; vertex != vertex_end; ++vertex, ++idx_vertex){
-         reco::Vertex::trackRef_iterator it_trk = vertex->tracks_begin();
-         for(; it_trk != vertex->tracks_end(); ++it_trk){
-            const reco::TrackBaseRef& baseRef = *it_trk;
-            if( baseRef == trackBaseRef ) {
-               float w = vertex->trackWeight(baseRef);
-               if (w > bestweight){
-                  bestweight = w;
-                  i_vtx_track = idx_vertex;
-               }
-            }
-         } 
+	reco::Vertex::trackRef_iterator it_trk = vertex->tracks_begin();
+	for(; it_trk != vertex->tracks_end(); ++it_trk){
+	  const reco::TrackBaseRef& baseRef = *it_trk;
+	  if( baseRef == trackBaseRef ) {
+	    float w = vertex->trackWeight(baseRef);
+	    if (w > bestweight){
+	      bestweight = w;
+	      i_vtx_track = idx_vertex;
+	    }
+	  }
+	} 
       }
 
       if( i_vtx_track == -1) continue;
@@ -865,10 +949,10 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 
     // A.P.
     if (debugdeep){
-       cout << "-- Jet pt2: " << pt2 << endl
-            << "   pt2_x, pt2_y, pt2_z: " << pt2_x << ", " << pt2_y << ", " << pt2_z << endl;
+      cout << "-- Jet pt2: " << pt2 << endl
+	<< "   pt2_x, pt2_y, pt2_z: " << pt2_x << ", " << pt2_y << ", " << pt2_z << endl;
     }
-               
+
     if (pt2 > 0.) {
       vx_mean = pt2_x/pt2;
       vy_mean = pt2_y/pt2;
@@ -1035,7 +1119,7 @@ void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
 	if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
 	  if(stopTrkDet1 && stopTrkDet2){
 	    ++checkCounter;
-	    if(fabs(JetVertex[0].Z()-VertexZPPS)<PPSVertexResolution_){
+	    if(fabs(VertexVector[0]->z()-VertexZPPS)<PPSVertexResolution_){
 	      ++CheckCounterAssociator;
 	    }
 	  }
@@ -1052,6 +1136,97 @@ void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
   }
 
 }
+
+void ExclusiveDijetsAnalysisUsingPPS::setToFGeometry(std::string geotype)
+{
+  ToFCellRow.clear();
+  ToFCellColumn.clear();
+  if (geotype=="Quartic") {
+    ToFGeometryType = "Quartic";
+    setQuartic();
+  } else if (geotype=="Diamond") {
+    ToFGeometryType = "Diamond";
+    //setDiamond();
+  } else {
+    std::cout << "Unknown ToF geometry." << std::endl;
+  }
+}
+void ExclusiveDijetsAnalysisUsingPPS::setQuartic()
+{
+  // the vertical positions starts from the negative(bottom) to the positive(top) corner
+  for(int i=0;i<NYCell;i++) {
+    // vector index points to the row number from below
+    double y1=QuarticCellHeight*(i-NYCell/2.);
+    double y2=QuarticCellHeight*(i-NYCell/2.+1);
+    ToFCellRow.push_back(pair<double,double>(y1,y2));
+  }
+  // vector index points to the column number
+  for(int i=0;i<NXCell;i++) {
+    double x1 = ToFXPos-(QuarticCellWidth*i);
+    double x2 = ToFXPos-(QuarticCellWidth*(i+1));
+    ToFCellColumn.push_back(pair<double,double>(x1,x2));
+  }
+}
+int ExclusiveDijetsAnalysisUsingPPS::ToFCellId(double x, double y)
+{
+  int y_idx,x_idx;
+  // first, get the row number
+  unsigned int i;
+  unsigned int start_idx=0;
+  unsigned int end_idx=ToFCellRow.size();
+  for(i=0;i<ToFCellRow.size();i++){
+    if (y>=ToFCellRow.at(i).first&&y<=ToFCellRow.at(i).second) break;
+  }
+  if (i>=ToFCellRow.size()) return 0;
+  y_idx = i+1;
+  if (ToFGeometryType=="Quartic") {
+    start_idx=0;end_idx=ToFCellColumn.size();
+    // cout <<  start_idx + end_idx << endl;
+  }
+  /*   if (ToFGeometryType=="Diamond") {
+       switch (y_idx) {
+       case 1: start_idx=0; end_idx=1;break;
+       case 3: start_idx=DiamondCentralCellW.size()+1;end_idx=ToFCellColumn.size();break;
+       case 2: start_idx=1;end_idx=1+DiamondCentralCellW.size();break;
+       default: cout  << "ERROR: unknown ToF row index" << endl;return 0;
+       }
+       }*/
+  for(i=start_idx;i<end_idx;i++) {
+    if (x<=ToFCellColumn.at(i).first&&x>ToFCellColumn.at(i).second) break;
+  }
+  if (i>=end_idx) return 0;
+  x_idx=i+1-start_idx;
+  return 100*y_idx+x_idx;
+}
+void ExclusiveDijetsAnalysisUsingPPS::setToFParameters(std::string geo,double xpos)
+{
+  //     if (!fInitialized) setDataFormat();
+  if (BeamX.count(1)==0||BeamX.count(2)==0||BeamX.count(3)==0||
+      BeamY.count(1)==0||BeamY.count(2)==0||BeamY.count(3)==0||
+      BeamX_RMS.count(1)==0||BeamX_RMS.count(2)==0||BeamX_RMS.count(3)==0||
+      BeamY_RMS.count(1)==0||BeamY_RMS.count(2)==0||BeamY_RMS.count(3)==0) {
+    std::cout << "ERROR: Beam parameters not given..." << std::endl;
+    return;
+  }
+  ToFXPos=-(xpos*BeamX_RMS[3]+RPWindowThickness);
+  ToFXPosSigma=xpos;
+  setToFGeometry(geo);
+}
+void ExclusiveDijetsAnalysisUsingPPS::setBeamParameters(int pos, double x,double y,double rms_x,double rms_y)
+{
+  if (pos<1||pos>3) {
+    cout << "ERROR: unknown detector position index: " << pos << endl;
+    cout << "       It should be 1 for Tracker 1, 2 for Tracker 2 and 3 for ToF."<<endl;
+    return;
+  }
+  BeamX[pos]=x;
+  BeamY[pos]=y;
+  BeamX_RMS[pos]=rms_x;
+  BeamY_RMS[pos]=rms_y;
+}
+
+
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExclusiveDijetsAnalysisUsingPPS);
