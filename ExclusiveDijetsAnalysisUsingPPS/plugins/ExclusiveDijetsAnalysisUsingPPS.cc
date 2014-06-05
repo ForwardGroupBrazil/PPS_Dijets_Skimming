@@ -1035,7 +1035,7 @@ void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
 	if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
 	  if(stopTrkDet1 && stopTrkDet2){
 	    ++checkCounter;
-	    if(fabs(VertexVector[0]->z()-VertexZPPS)<PPSVertexResolution_){
+	    if(fabs(JetVertex[0].Z()-VertexZPPS)<PPSVertexResolution_){
 	      ++CheckCounterAssociator;
 	    }
 	  }
