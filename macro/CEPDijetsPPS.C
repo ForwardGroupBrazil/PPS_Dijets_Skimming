@@ -27,6 +27,7 @@
 #include <cmath>
 #define PI 3.141592653589793
 using namespace std;
+Bool_t switchlumiweight = true;
 void CEPDijetsPPS()
 {
     //------------ FWLite libraries ------
@@ -35,10 +36,11 @@ void CEPDijetsPPS()
     gROOT->ProcessLine("#include<vector>");
     gROOT->ProcessLine(".exception"); 
     //------------ files -----------------
-    TFile *inf  = TFile::Open("ttreeCEPdijetsNoOOT_NoPU.root");
-    //TFile *inf  = TFile::Open("ttreeCEPdijetsNoOOT_PU.root");
+    //TFile *inf  = TFile::Open("ttreeCEPdijetsNoOOT_NoPU.root");
+    TFile *inf  = TFile::Open("ttreeCEPdijetsNoOOT_PU.root");
     //TFile *inf  = TFile::Open("ttreeCEPdijetsOOT_PU.root");
-    TFile *outf = new TFile("CEPDijets_PPS_NoOOT_NoPU_Histos.root","RECREATE");
+    TFile *outf = new TFile("CEPDijets_PPS_NoOOT_PU_HistosTEST.root","RECREATE");
+
     TTree *tr = (TTree*)inf->Get("demo/Event");
     //----------- define the tree branch --------
     std::vector<double>  *JetsPt=0;
@@ -156,7 +158,18 @@ void CEPDijetsPPS()
     tr->SetBranchAddress("Mpf", &Mpf, &bMpf);
     tr->SetBranchAddress("Rjj", &Rjj, &bRjj);
     //----------- settings ---------------
-    int NEVENTS=2000;
+    bool verbose = false;
+    int NEVENTS = tr->GetEntries();
+    cout<<"MC EVENTS= "<<NEVENTS<<endl;
+    float cross_section =1700.0 ; //[fb]
+    float luminosity=100.0;//[fb]^-1
+    double lumiweight = (luminosity*cross_section)/NEVENTS;
+    cout<<"lumiweight= "<<lumiweight<<endl;
+    double mclumiweight = 1.0;
+    if (switchlumiweight ){
+        mclumiweight = lumiweight;
+    }
+
     int Njets=0;
     double pTmin  = 50.0;
     double etamin = -2.0;
@@ -175,7 +188,6 @@ void CEPDijetsPPS()
     double ymax = 9.0;
     double ymin =-9.0;
 
-    bool verbose = false;
 
     //--------- book histos ---------------------------------
     TH1F *hNJets = new TH1F("NJets","N Jets;  N Jets; N events",100,0,100);
@@ -234,21 +246,21 @@ void CEPDijetsPPS()
 
 
         //------- fill some Jets  histograms ------------------
-        hLeadingJetPt->Fill(CandidatesJets_pt->at(0));
-        hSecondJetPt->Fill(CandidatesJets_pt->at(1));
-        hLeadingJetEta->Fill(CandidatesJets_eta->at(0));
-        hSecondJetEta->Fill(CandidatesJets_eta->at(1));
-        hLeadingJetPhi->Fill(CandidatesJets_phi->at(0));
-        hSecondJetPhi->Fill(CandidatesJets_phi->at(1));
+        hLeadingJetPt->Fill(CandidatesJets_pt->at(0),mclumiweight);
+        hSecondJetPt->Fill(CandidatesJets_pt->at(1),mclumiweight);
+        hLeadingJetEta->Fill(CandidatesJets_eta->at(0),mclumiweight);
+        hSecondJetEta->Fill(CandidatesJets_eta->at(1),mclumiweight);
+        hLeadingJetPhi->Fill(CandidatesJets_phi->at(0),mclumiweight);
+        hSecondJetPhi->Fill(CandidatesJets_phi->at(1),mclumiweight);
         deltaeta = fabs(CandidatesJets_eta->at(0)-CandidatesJets_eta->at(1));
         deltaphi = fabs(CandidatesJets_phi->at(0)-CandidatesJets_phi->at(1));
         if (deltaphi> PI){deltaphi = 2.0*PI - deltaphi;}
-        hDeltaEtaJets->Fill(deltaeta);
-        hDeltaPhiJets->Fill(deltaphi);
+        hDeltaEtaJets->Fill(deltaeta,mclumiweight);
+        hDeltaPhiJets->Fill(deltaphi),mclumiweight;
 
-        hVertexZCMSPPS->Fill(GoldenVertexZ,VertexZPPS);        
-        hVertexZCMS->Fill(GoldenVertexZ);
-        hVertexZPPS->Fill(VertexZPPS);
+        hVertexZCMSPPS->Fill(GoldenVertexZ,VertexZPPS,mclumiweight);        
+        hVertexZCMS->Fill(GoldenVertexZ,mclumiweight);
+        hVertexZPPS->Fill(VertexZPPS,mclumiweight);
         //--------- PPS x vs y -----------------------
         //x,det1 e det2 nos dois arms < - 3.1 e  > -23.1 mm
         //y,det1 e det2 nos dois arms > -9 e < 9 mm
@@ -263,12 +275,13 @@ void CEPDijetsPPS()
         if(verbose)cout<<"stopTrkArmF:"<<stopTrkArmF<<" , "<<"stopTrkArmB"<<stopTrkArmB<<endl;
         // Mjj and Mx before PPS sel
         if(xiPPSArmF>0.0 && xiPPSArmB>0.0){
-            MxPPSBeforeCuts = S*sqrt(xiPPSArmF*xiPPSArmB); cout<<"Mx BF = "<<S*sqrt(xiPPSArmF*xiPPSArmB)<<endl;
+            MxPPSBeforeCuts = S*sqrt(xiPPSArmF*xiPPSArmB); 
+            if(verbose)cout<<"Mx BF = "<<S*sqrt(xiPPSArmF*xiPPSArmB)<<endl;
             MJJBC = CandidatesMjj;
         }
-        hMxBC->Fill(MxPPSBeforeCuts);
-        hMjjBC->Fill(MJJBC);                                                                                        
-        hMxPPSvsMjjBC->Fill(MxPPS,MJJ);
+        hMxBC->Fill(MxPPSBeforeCuts,mclumiweight);
+        hMjjBC->Fill(MJJBC,mclumiweight);                                                                                        
+        hMxPPSvsMjjBC->Fill(MxPPS,MJJ,mclumiweight);
         //PPS sel
         if(cutXArmF && cutYArmF && cutXArmB && cutYArmB){
             ++counter_fiducial;
@@ -276,10 +289,10 @@ void CEPDijetsPPS()
             if(verbose)cout<<"y: "<<yPPSArmFDet1<<", "<<yPPSArmBDet1<<", "<<yPPSArmBDet1<<", "<<yPPSArmBDet2<<endl;  
             if(stopTrkArmF && stopTrkArmB){
                 ++counter_hasStoped;
-                hPPS_xVsy_ARMPlusDt1->Fill(xPPSArmFDet1,yPPSArmFDet1);
-                hPPS_xVsy_ARMPlusDt2->Fill(xPPSArmFDet2,yPPSArmFDet2); 
-                hPPS_xVsy_ARMMinusDt1->Fill(xPPSArmBDet1,yPPSArmBDet1);
-                hPPS_xVsy_ARMMinusDt2->Fill(xPPSArmBDet2,yPPSArmBDet2);
+                hPPS_xVsy_ARMPlusDt1->Fill(xPPSArmFDet1,yPPSArmFDet1,mclumiweight);
+                hPPS_xVsy_ARMPlusDt2->Fill(xPPSArmFDet2,yPPSArmFDet2,mclumiweight); 
+                hPPS_xVsy_ARMMinusDt1->Fill(xPPSArmBDet1,yPPSArmBDet1,mclumiweight);
+                hPPS_xVsy_ARMMinusDt2->Fill(xPPSArmBDet2,yPPSArmBDet2,mclumiweight);
                 //--------- PPS xi ----------------------------
                 if(xiPPSArmF>0.0 && xiPPSArmB>0.0){
                     ++counter_xiArms;
@@ -288,27 +301,27 @@ void CEPDijetsPPS()
 
                         if((CandidatesJets_eta->at(0)>etamin && CandidatesJets_eta->at(0)<etamax)&&(CandidatesJets_eta->at(1)>etamin && CandidatesJets_eta->at(1)<etamax)){
                             ++counter_jetEta;
-                            hPPS_xiARMPlus->Fill(xiPPSArmF);
-                            hPPS_xiARMMinus->Fill(xiPPSArmB);
+                            hPPS_xiARMPlus->Fill(xiPPSArmF,mclumiweight);
+                            hPPS_xiARMMinus->Fill(xiPPSArmB,mclumiweight);
                             MxPPS = S*sqrt(xiPPSArmF*xiPPSArmB);
                             if(verbose)std::cout<<"xiPPSArmF="<< xiPPSArmF<<","<<"xiPPSArmB="<<xiPPSArmB<<", "<<"S= "<<S<<std::endl;
                             if(verbose)std::cout<<"Mx = "<<S*sqrt(xiPPSArmF*xiPPSArmB)<<std::endl;
                             MJJ = CandidatesMjj; 
-                            hLeadingJetPtAfterPPS->Fill(CandidatesJets_pt->at(0));
-                            hSecondJetPtAfterPPS->Fill(CandidatesJets_pt->at(1));
-                            hLeadingJetEtaAfterPPS->Fill(CandidatesJets_eta->at(0));
-                            hSecondJetEtaAfterPPS->Fill(CandidatesJets_eta->at(1));
-                            hLeadingJetPhiAfterPPS->Fill(CandidatesJets_phi->at(0));
-                            hSecondJetPhiAfterPPS->Fill(CandidatesJets_phi->at(1));
-                            hDeltaEtaJetsAfterPPS->Fill(deltaeta);
-                            hDeltaPhiJetsAfterPPS->Fill(deltaphi);
+                            hLeadingJetPtAfterPPS->Fill(CandidatesJets_pt->at(0),mclumiweight);
+                            hSecondJetPtAfterPPS->Fill(CandidatesJets_pt->at(1),mclumiweight);
+                            hLeadingJetEtaAfterPPS->Fill(CandidatesJets_eta->at(0),mclumiweight);
+                            hSecondJetEtaAfterPPS->Fill(CandidatesJets_eta->at(1),mclumiweight);
+                            hLeadingJetPhiAfterPPS->Fill(CandidatesJets_phi->at(0),mclumiweight);
+                            hSecondJetPhiAfterPPS->Fill(CandidatesJets_phi->at(1),mclumiweight);
+                            hDeltaEtaJetsAfterPPS->Fill(deltaeta,mclumiweight);
+                            hDeltaPhiJetsAfterPPS->Fill(deltaphi,mclumiweight);
                             //--------------------------------------------
                         } // xi cut
-                        hMx->Fill(MxPPS);
+                        hMx->Fill(MxPPS,mclumiweight);
                         if(verbose)std::cout<<"Mx_b = "<<S*sqrt(xiPPSArmF*xiPPSArmB)<<std::endl;
-                        hMjj->Fill(MJJ); 
+                        hMjj->Fill(MJJ,mclumiweight); 
                         if(verbose)std::cout<<"Mjj = "<<CandidatesMjj<<" "<<"MJJ = "<<Mjj<<std::endl;
-                        hMxPPSvsMjj->Fill(MxPPS,MJJ);
+                        hMxPPSvsMjj->Fill(MxPPS,MJJ,mclumiweight);
                     } //stopTrk
                 } //x,y cut
             }//eta jet cuts
@@ -317,11 +330,24 @@ void CEPDijetsPPS()
     }// tree loop
     //----------------- print out some information ---------------
     cout<<"Events read:                      "<<NEVENTS<<endl;
+    cout<<"MC cross-section:                 "<<cross_section<<" [fb]"<<endl;
+    cout<<"Luminosity:                       "<<luminosity<<" [fb]^-1"<<endl;
+    cout<<"Weight:                           "<<mclumiweight<<endl;
+    cout<<"Events read:                      "<<NEVENTS<<endl;
     cout<<"Events after fiducial:            "<<counter_fiducial<<endl; 
     cout<<"Events after hasStoped:           "<<counter_hasStoped<<endl; 
     cout<<"Events after XiArms>0:            "<<counter_xiArms<<endl; 
     cout<<"Events after jetpT<50GeV:         "<<counter_jetpT<<endl;                                                                                          
     cout<<"Events after jetEta<2.0:          "<<counter_jetEta<<endl; 
+    cout << "\n----------------------------------------------------" << endl;
+    cout << "Numbers Normalized" << endl;
+    cout << "------------------------------------------------------" << endl;
+    cout<<"Events read:                      "<<NEVENTS*mclumiweight<<endl; 
+    cout<<"Events after hasStoped:           "<<counter_hasStoped*mclumiweight<<endl; 
+    cout<<"Events after XiArms>0:            "<<counter_xiArms*mclumiweight<<endl; 
+    cout<<"Events after jetpT<50GeV:         "<<counter_jetpT*mclumiweight<<endl;                                                                                          
+    cout<<"Events after jetEta<2.0:          "<<counter_jetEta*mclumiweight<<endl; 
+    
     //----------------- save the histos to the output file ------
     outf->Write();
 }
