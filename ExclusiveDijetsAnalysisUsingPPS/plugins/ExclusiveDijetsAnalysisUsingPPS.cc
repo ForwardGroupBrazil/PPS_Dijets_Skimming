@@ -164,6 +164,19 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		std::vector<double> yPPSArmBToFInfo;
 
 
+       std::vector<double>  stopPPSArmFToFInfo;
+       std::vector<double>  stopPPSArmBToFInfo;
+
+       std::vector<double>  stopPPSArmFTrkDet1Info;
+       std::vector<double>  stopPPSArmFTrkDet2Info;
+       std::vector<double>  stopPPSArmBTrkDet1Info;
+       std::vector<double>  stopPPSArmBTrkDet2Info;
+
+
+
+
+
+
 		double VertexGEN_x;
 		double VertexGEN_y;
 		double VertexGEN_z;
@@ -362,9 +375,16 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 	eventTree_->Branch("yPPSArmBToFInfo",&yPPSArmBToFInfo);
 
 
-
-
-
+      //Stop ToF    
+        eventTree_->Branch("stopPPSArmFToFInfo",&stopPPSArmFToFInfo);
+        eventTree_->Branch("stopPPSArmBToFInfo",&stopPPSArmBToFInfo);
+      // Arm TRK FWD
+        eventTree_->Branch("stopPPSArmFTrkDet1Info",&stopPPSArmFTrkDet1Info);
+        eventTree_->Branch("stopPPSArmFTrkDet2Info",&stopPPSArmFTrkDet2Info);
+       //Arm TRK BCW
+        eventTree_->Branch("stopPPSArmBTrkDet1Info",&stopPPSArmBTrkDet1Info);
+        eventTree_->Branch("stopPPSArmBTrkDet2Info",&stopPPSArmBTrkDet2Info);
+ 
 
 
 
@@ -517,6 +537,15 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
        yPPSArmFToFInfo.clear();
        xPPSArmBToFInfo.clear();
        yPPSArmBToFInfo.clear();
+
+      stopPPSArmFToFInfo.clear(); 
+      stopPPSArmBToFInfo.clear();
+
+	stopPPSArmFTrkDet1Info.clear();
+	stopPPSArmFTrkDet2Info.clear();
+	stopPPSArmBTrkDet1Info.clear();
+	stopPPSArmBTrkDet2Info.clear();
+
 
 
 }
@@ -709,8 +738,8 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 		xPPSArmBDet2 = ppsSpectrum->ArmB.TrkDet2.X[0];
 		yPPSArmBDet2 = ppsSpectrum->ArmB.TrkDet2.Y[0];
 		for (unsigned int k=0;k<ppsSpectrum->ArmB.TrkDet2.X.size();k++){
-			xPPSArmBDet1Info.push_back(ppsSpectrum->ArmB.TrkDet2.X[k]);
-			yPPSArmBDet1Info.push_back(ppsSpectrum->ArmB.TrkDet2.Y[k]);
+			xPPSArmBDet2Info.push_back(ppsSpectrum->ArmB.TrkDet2.X[k]);
+			yPPSArmBDet2Info.push_back(ppsSpectrum->ArmB.TrkDet2.Y[k]);
 		}
 
 
@@ -776,26 +805,66 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 	// ArmF and ArmB, HasStopped Info
 	if(ppsSpectrum->ArmF.ToFDet.HasStopped.size() > 0){
 		stopPPSArmFToF = ppsSpectrum->ArmF.ToFDet.HasStopped[0];
+                for (unsigned int k=0;k<ppsSpectrum->ArmF.ToFDet.HasStopped.size();k++){
+                 stopPPSArmFToFInfo.push_back(ppsSpectrum->ArmF.ToFDet.HasStopped[k]);
+              
+               } 
 	}
 
 	if(ppsSpectrum->ArmB.ToFDet.HasStopped.size() > 0){
 		stopPPSArmBToF = ppsSpectrum->ArmB.ToFDet.HasStopped[0];
+               for (unsigned int k=0;k<ppsSpectrum->ArmB.ToFDet.HasStopped.size();k++){
+                 stopPPSArmBToFInfo.push_back(ppsSpectrum->ArmB.ToFDet.HasStopped[k]);
+
+               }
+
+
+
 	}
 
 	if(ppsSpectrum->ArmF.TrkDet1.HasStopped.size() > 0){
 		stopPPSArmFTrkDet1 = ppsSpectrum->ArmF.TrkDet1.HasStopped[0];
+                for (unsigned int k=0;k<ppsSpectrum->ArmF.TrkDet1.HasStopped.size();k++){
+                 stopPPSArmFTrkDet1Info.push_back(ppsSpectrum->ArmF.TrkDet1.HasStopped[k]);
+
+               }
+ 
+
+
 	}
 
 	if(ppsSpectrum->ArmB.TrkDet1.HasStopped.size() > 0){
 		stopPPSArmBTrkDet1 = ppsSpectrum->ArmB.TrkDet1.HasStopped[0];
+                  for (unsigned int k=0;k<ppsSpectrum->ArmB.TrkDet1.HasStopped.size();k++){
+                 stopPPSArmBTrkDet1Info.push_back(ppsSpectrum->ArmB.TrkDet1.HasStopped[k]);
+
+               }
+
+
+
 	}
 
 	if(ppsSpectrum->ArmF.TrkDet2.HasStopped.size() > 0){
 		stopPPSArmFTrkDet2 = ppsSpectrum->ArmF.TrkDet2.HasStopped[0];
+                 for (unsigned int k=0;k<ppsSpectrum->ArmF.TrkDet2.HasStopped.size();k++){
+                 stopPPSArmFTrkDet2Info.push_back(ppsSpectrum->ArmF.TrkDet2.HasStopped[k]);
+
+               }
+
+              
+
 	}
 
 	if(ppsSpectrum->ArmB.TrkDet2.HasStopped.size() > 0){
 		stopPPSArmBTrkDet2 = ppsSpectrum->ArmB.TrkDet2.HasStopped[0];
+                  for (unsigned int k=0;k<ppsSpectrum->ArmB.TrkDet2.HasStopped.size();k++){
+                 stopPPSArmBTrkDet2Info.push_back(ppsSpectrum->ArmB.TrkDet2.HasStopped[k]);
+
+               }
+
+   
+
+
 	}
 
 	// PPS Vertex

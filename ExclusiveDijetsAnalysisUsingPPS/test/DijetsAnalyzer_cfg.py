@@ -1,5 +1,3 @@
-#flake8: noqa
-
 '''
 >>--------------------<<
 CEP JJ NTuple Producer
@@ -97,9 +95,19 @@ if MC_NO_OOT_NO_PU:
       duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
       fileNames = cms.untracked.vstring(
           'file:/storage2/polme/GG/GG_noOOT_noPU_1.root',
-          'file:/storage2/polme/GG/GG_noOOT_noPU_2.root',
-          'file:/storage2/polme/GG/GG_noOOT_noPU_3.root',
-          'file:/storage2/polme/GG/GG_noOOT_noPU_4.root'
+          'file:/storage2/polme/GG/GG_noOOT_noPU_10a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_10b.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_2a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_2b.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_3a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_3b.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_4.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_5.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_6.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_7.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_8.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_9a.root',
+          'file:/storage2/polme/GG/GG_noOOT_noPU_9b.root'
       )
    )
 
@@ -107,6 +115,24 @@ if MC_NO_OOT_PU:
    process.source = cms.Source("PoolSource",
       duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
       fileNames = cms.untracked.vstring(
+          'file:/storage2/polme/GG/GG_noOOT_new_1.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_2.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_3.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_4.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_5.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_6.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_7.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_8.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_9.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_10.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_11.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_12.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_13.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_14.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_15.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_16.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_17.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_18.root',
           'file:/storage2/polme/GG/GG_noOOT_new_19.root',
           'file:/storage2/polme/GG/GG_noOOT_new_20.root',
           'file:/storage2/polme/GG/GG_noOOT_new_21.root',
@@ -128,7 +154,17 @@ if MC_NO_OOT_PU:
           'file:/storage2/polme/GG/GG_noOOT_new_37.root',
           'file:/storage2/polme/GG/GG_noOOT_new_38.root',
           'file:/storage2/polme/GG/GG_noOOT_new_39.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_40.root'
+          'file:/storage2/polme/GG/GG_noOOT_new_40.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_41.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_42.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_43.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_44.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_45.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_46.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_47.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_48.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_49.root',
+          'file:/storage2/polme/GG/GG_noOOT_new_50.root'
       )
    )
 
@@ -142,8 +178,8 @@ process.goodOfflinePrimaryVertices = cms.EDFilter(
 
 # Adding Tracks Associator with Vertex Collection
 process.ak5JetTracksAssociatorAtVertex = cms.EDProducer("JetTracksAssociatorAtVertex",
-      	                                                 tracks = cms.InputTag("generalTracks"),
-                                                         jets   = cms.InputTag("ak5PFJets"),
+       tracks = cms.InputTag("generalTracks"),
+                                                         jets = cms.InputTag("ak5PFJets"),
                                                          coneSize = cms.double(0.5)
                                                        )
 
@@ -151,9 +187,9 @@ process.ak5JetTracksAssociatorAtVertex = cms.EDProducer("JetTracksAssociatorAtVe
 process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
                                MakePlots = cms.bool(True),
                                JetTag = cms.InputTag(jettag),
-			       ParticleFlowTag = cms.InputTag("particleFlow"),
+ParticleFlowTag = cms.InputTag("particleFlow"),
                                VertexTag = cms.InputTag("goodOfflinePrimaryVertices"),
-			       PPSTag = cms.untracked.string("PPSReco"),
+PPSTag = cms.untracked.string("PPSReco"),
                                pTPFThresholdCharged = cms.double(0.1),
                                energyPFThresholdBar = cms.double(1.5),
                                energyPFThresholdEnd = cms.double(3.5),
@@ -170,3 +206,4 @@ process.TFileService = cms.Service("TFileService",
 
 # Path, Run modules in order.
 process.p = cms.Path(process.goodOfflinePrimaryVertices*process.ak5JetTracksAssociatorAtVertex*process.demo)
+
