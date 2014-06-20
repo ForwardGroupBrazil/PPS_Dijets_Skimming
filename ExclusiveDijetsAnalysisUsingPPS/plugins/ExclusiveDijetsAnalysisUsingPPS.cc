@@ -17,6 +17,14 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+
+//GenJets
+#include "DataFormats/JetReco/interface/GenJet.h"
+#include "DataFormats/JetReco/interface/GenJetCollection.h"
+// Gen Particles
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
+
 // dataformats
 #include "DataFormats/JetReco/interface/Jet.h"
 #include "DataFormats/JetReco/interface/PFJet.h"
@@ -28,6 +36,11 @@
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
+#include "DataFormats/Math/interface/LorentzVector.h"
+
+
+
+//PPS
 #include "DataFormats/PPSObjects/interface/PPSSpectrometer.h"
 #include "DataFormats/PPSObjects/interface/PPSData.h"
 #include "DataFormats/PPSObjects/interface/PPSDetector.h"
@@ -47,6 +60,7 @@
 #include "TH2F.h"
 #include "TMath.h"
 #include "TTree.h"
+//#include "TLorentzVector.h"
 
 // c++
 #include <cmath>
@@ -86,12 +100,16 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		void AssociateJetsWithVertex(const edm::Event&, const edm::EventSetup&, bool debug);
 		void ResolutionStudies(bool debug);
 		void PPSSelection();
+		void GenCollections(const edm::Event&, const edm::EventSetup&, bool debug);
 
 		bool MakePlots_;
+		edm::InputTag  genjets_ ;
 		edm::InputTag jetTag_;
 		edm::InputTag particleFlowTag_;
 		edm::InputTag VertexTag_;
+
 		std::string ppsTag_;
+
 		double pTPFThresholdCharged_;
 		double energyPFThresholdBar_;
 		double energyPFThresholdEnd_;
@@ -100,22 +118,34 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		double PPSVertexResolution_;
 		double EBeam_;
 
-		int indexGold;
+		int indexGold,indexGoldToF_00,indexGoldToF_0i,indexGoldToF_ii;
+
 		int nAssociated=0;
 		int checkCounter=0;
 		int CheckCounterAssociator=0;
 
+		std::vector<const reco::GenJet*> GenJetsVector;
 		std::vector<const reco::PFJet*> JetsVector;
 		std::vector<const reco::Vertex*> VertexVector;
 		std::vector<const reco::Track*> TracksVector;
 		std::vector<const reco::PFCandidate*> PFVector;
 		std::vector<const PPSSpectrometer*> PPSSpecVector;
 		std::vector< std::pair<double,double> > PPSCMSVertex;
+
+
+		std::vector< std::pair<double,double> >PPSCMSVertexToF_00;
+		std::vector< std::pair<double,double> >PPSCMSVertexToF_0i;
+		std::vector< std::pair<double,double> >PPSCMSVertexToF_ii;
+
 		std::vector<const reco::PFJet*> PFJets;
 		std::vector<double> MinimumDistance;
 		std::vector<double> DistanceBetweenJets;   
 		std::vector< math::XYZVector > JetVertex;
 		std::vector< math::XYZVector > JetsSamePosition;
+
+		std::vector<double> GenJetsVector_pt;
+		std::vector<double> GenJetsVector_eta;
+		std::vector<double> GenJetsVector_phi;
 
 		std::vector<double> JetsVector_pt;
 		std::vector<double> JetsVector_eta;
@@ -164,19 +194,20 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		std::vector<double> yPPSArmBToFInfo;
 
 
-       std::vector<double>  stopPPSArmFToFInfo;
-       std::vector<double>  stopPPSArmBToFInfo;
+		std::vector<double>  stopPPSArmFToFInfo;
+		std::vector<double>  stopPPSArmBToFInfo;
 
-       std::vector<double>  stopPPSArmFTrkDet1Info;
-       std::vector<double>  stopPPSArmFTrkDet2Info;
-       std::vector<double>  stopPPSArmBTrkDet1Info;
-       std::vector<double>  stopPPSArmBTrkDet2Info;
+		std::vector<double>  stopPPSArmFTrkDet1Info;
+		std::vector<double>  stopPPSArmFTrkDet2Info;
+		std::vector<double>  stopPPSArmBTrkDet1Info;
+		std::vector<double>  stopPPSArmBTrkDet2Info;
 
+		// Gen Proton Info
+		std::vector<const reco::GenParticle*> GenProtonVectorInfo;
+		std::vector< math::XYZTLorentzVector > protonLorentzVector;
+		//std::vector <ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > *protonLorentzVector;
 
-
-
-
-
+		// Gen Vertex 
 		double VertexGEN_x;
 		double VertexGEN_y;
 		double VertexGEN_z;
@@ -207,18 +238,23 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		int stopPPSArmBToF, stopPPSArmFToF;
 		double Mjj;
 		double Mpf;
-		double Rjj;
+		double GenRjj,Rjj;
+		double GenMjj;
 		double CandidatesMjj;
 		double MinDistanceZVertex;
 		double MaxDistanceZVertex;
 		bool acceptPrint = false;
-		double Mx;
+		double GenMxx,Mx;
 		bool FiducialCut = false;
 
 		double resol[18]={0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5};
 		int counter[18]={0};
 		int size_resol = NELEMS(resol);
 		TH2D *h_vertex;
+
+		// xi and t gen 
+
+		double xigen_plus,xigen_minus,tgen_plus,tgen_minus;                
 
 
 		// ToF detector
@@ -272,6 +308,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 
 ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet& iConfig):
 	MakePlots_(iConfig.getParameter<bool>("MakePlots")),
+	genjets_(iConfig.getParameter<edm::InputTag>("GenJets")), 
 	jetTag_(iConfig.getParameter<edm::InputTag>("JetTag")),
 	particleFlowTag_(iConfig.getParameter<edm::InputTag>("ParticleFlowTag")),
 	VertexTag_(iConfig.getParameter<edm::InputTag>("VertexTag")),
@@ -287,9 +324,16 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 
 	edm::Service<TFileService> fs;
 	eventTree_ = fs->make<TTree>("Event","Event");
+	//eventTree_->Branch("GenJetsVector",&GenJetsVector);
+
+	eventTree_->Branch("GenJetsPt",&GenJetsVector_pt);
+	eventTree_->Branch("GenJetsEta",&GenJetsVector_eta);
+	eventTree_->Branch("GenJetsPhi",&GenJetsVector_phi);
+
 	eventTree_->Branch("JetsPt",&JetsVector_pt);
 	eventTree_->Branch("JetsEta",&JetsVector_eta);
 	eventTree_->Branch("JetsPhi",&JetsVector_phi);
+
 	eventTree_->Branch("JetVertex",&JetVertex);
 	eventTree_->Branch("JetsSameVertex_pt",&JetsSameVector_pt);
 	eventTree_->Branch("JetsSameVertex_eta",&JetsSameVector_eta);
@@ -340,10 +384,24 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 	eventTree_->Branch("stopPPSArmFToF",&stopPPSArmFToF,"stopPPSArmFToF/I");
 	eventTree_->Branch("stopPPSArmBToF",&stopPPSArmBToF,"stopPPSArmBToF/I");
 	eventTree_->Branch("Mjj",&Mjj,"Mjj/D");
+
+	eventTree_->Branch("GenMjj",&GenMjj,"GenMjj/D");
+
+	eventTree_->Branch("xigen_plus",&xigen_plus,"xigen_plus/D");
+	eventTree_->Branch("xigen_minus",&xigen_minus,"xigen_minus/D");
+	eventTree_->Branch("tgen_plus",&tgen_plus,"tgen_plus/D");
+	eventTree_->Branch("tgen_minus",&tgen_minus,"tgen_minus/D");
+
+
 	eventTree_->Branch("Mpf",&Mpf,"Mpf/D");
 	eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
+      
+        eventTree_->Branch("GenRjj",&Rjj,"GenRjj/D");
 	eventTree_->Branch("CandidatesMjj",&CandidatesMjj,"CandidatesMjj/D");
 	eventTree_->Branch("Mx",&Mx,"Mx/D");
+
+        eventTree_->Branch("GenMxx",&GenMxx,"GenMxx/D");
+
 	eventTree_->Branch("FiducialCut",&FiducialCut,"FiducialCut/B");
 	eventTree_->Branch("deltaToF_00",&deltaToF_00,"deltaToF_00/D");
 	eventTree_->Branch("deltaToF_0i",&deltaToF_0i,"deltaToF_0i/D");
@@ -375,16 +433,25 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 	eventTree_->Branch("yPPSArmBToFInfo",&yPPSArmBToFInfo);
 
 
-      //Stop ToF    
-        eventTree_->Branch("stopPPSArmFToFInfo",&stopPPSArmFToFInfo);
-        eventTree_->Branch("stopPPSArmBToFInfo",&stopPPSArmBToFInfo);
-      // Arm TRK FWD
-        eventTree_->Branch("stopPPSArmFTrkDet1Info",&stopPPSArmFTrkDet1Info);
-        eventTree_->Branch("stopPPSArmFTrkDet2Info",&stopPPSArmFTrkDet2Info);
-       //Arm TRK BCW
-        eventTree_->Branch("stopPPSArmBTrkDet1Info",&stopPPSArmBTrkDet1Info);
-        eventTree_->Branch("stopPPSArmBTrkDet2Info",&stopPPSArmBTrkDet2Info);
- 
+	//Stop ToF    
+	eventTree_->Branch("stopPPSArmFToFInfo",&stopPPSArmFToFInfo);
+	eventTree_->Branch("stopPPSArmBToFInfo",&stopPPSArmBToFInfo);
+	// Arm TRK FWD
+	eventTree_->Branch("stopPPSArmFTrkDet1Info",&stopPPSArmFTrkDet1Info);
+	eventTree_->Branch("stopPPSArmFTrkDet2Info",&stopPPSArmFTrkDet2Info);
+	//Arm TRK BCW
+	eventTree_->Branch("stopPPSArmBTrkDet1Info",&stopPPSArmBTrkDet1Info);
+	eventTree_->Branch("stopPPSArmBTrkDet2Info",&stopPPSArmBTrkDet2Info);
+
+	// ToF Position combination on Z axis
+	//PPSCMSVertexToF_00 sinal + sinal  PPSCMSVertexToF_0i signal + PU PPSCMSVertexToF_ii PU + PU
+	eventTree_->Branch("PPSCMSVertexToF_00",&PPSCMSVertexToF_00);
+	eventTree_->Branch("PPSCMSVertexToF_0i",&PPSCMSVertexToF_0i);
+	eventTree_->Branch("PPSCMSVertexToF_ii",&PPSCMSVertexToF_ii);
+
+	// Proton Info      
+	//	eventTree_->Branch("GenProtonVectorInfo",&GenProtonVectorInfo);
+	  eventTree_->Branch("ProtonsP4",&protonLorentzVector);
 
 
 
@@ -415,8 +482,8 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
 	cout << "\n--- S U M M A R Y---" << endl;
 	cout << "# evt (Associated Vertex, full algorithm): " << nAssociated << endl;
 	if(acceptPrint){
-		cout << "# evt (LeadingJets_pT >50 GeV & Jets at Tracker & Fiducial PPS): " << checkCounter << endl;
-		cout << "# evt (LeadingJets_pT >50 GeV & Jets at Tracker & Fiducial PPS & PPS/CMS Vertex): " << CheckCounterAssociator << endl;
+		cout << "# evt (LeadingJets_pT >100 GeV & Jets at Tracker & Fiducial PPS): " << checkCounter << endl;
+		cout << "# evt (LeadingJets_pT >100 GeV & Jets at Tracker & Fiducial PPS & PPS/CMS Vertex): " << CheckCounterAssociator << endl;
 	}
 
 	if(MakePlots_) {
@@ -434,6 +501,7 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
 void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
 	Init(); // Clean Variables
+	GenCollections(iEvent, iSetup, false);
 	FillCollections(iEvent, iSetup, false); //true-> Print Outputs and Golden Vertex (PPS and CMS). False-> No print screen.
 	SortingObjects(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
 	AssociateJetsWithVertex(iEvent, iSetup, false); //true-> Print Ordered Outputs, False-> No print screen.
@@ -447,12 +515,19 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
 
 void ExclusiveDijetsAnalysisUsingPPS::Init(){
 
+	GenJetsVector.clear();
 	JetsVector.clear();
 	VertexVector.clear();
 	TracksVector.clear();
 	PFVector.clear();
 	PPSSpecVector.clear();
 	PPSCMSVertex.clear();
+
+	//ToF Vertex position in Z axis combinations : sig + sign (00), sign + PU(0i), PU+PU (ii) 
+	PPSCMSVertexToF_00.clear();
+	PPSCMSVertexToF_0i.clear();
+	PPSCMSVertexToF_ii.clear();
+
 	JetsSameVector_pt.clear();
 	JetsSameVector_eta.clear();
 	JetsSameVector_phi.clear();
@@ -463,9 +538,14 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	AllDiffVertexVector.clear();
 	DistanceBetweenJets.clear();
 
+	GenJetsVector_pt.clear();
+	GenJetsVector_eta.clear();
+	GenJetsVector_phi.clear();
+
 	JetsVector_pt.clear();
 	JetsVector_eta.clear();
 	JetsVector_phi.clear();
+
 	VertexCMSVectorX.clear();
 	VertexCMSVectorY.clear();
 	VertexCMSVectorZ.clear();
@@ -507,12 +587,27 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	Mjj= -999.;
 	Mpf= -999.;
 	Rjj= -999.;
+	// Mjj gen jet level
+	GenMjj = -999.;
+        GenRjj = -999.;
+
 	VertexZPPS = -999.;
 	CandidatesMjj = -999.;
 	MaxDistanceZVertex = -999.;
 	MaxDistanceZVertex = -999.;
 	Mx = -999.;
+        GenMxx = -999.;
+
 	FiducialCut = false;
+
+
+	//t and xi gen level
+	xigen_plus = -999.;
+	xigen_minus = -999.;
+
+	tgen_plus = -999.;
+	tgen_minus = -999.;
+
 
 	// Clearing vectors
 	xiPPSArmFInfo.clear();
@@ -532,23 +627,214 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	xPPSArmBDet2Info.clear();
 	yPPSArmBDet2Info.clear();
 
-        //
-       xPPSArmFToFInfo.clear();
-       yPPSArmFToFInfo.clear();
-       xPPSArmBToFInfo.clear();
-       yPPSArmBToFInfo.clear();
+	//
+	xPPSArmFToFInfo.clear();
+	yPPSArmFToFInfo.clear();
+	xPPSArmBToFInfo.clear();
+	yPPSArmBToFInfo.clear();
 
-      stopPPSArmFToFInfo.clear(); 
-      stopPPSArmBToFInfo.clear();
+	stopPPSArmFToFInfo.clear(); 
+	stopPPSArmBToFInfo.clear();
 
 	stopPPSArmFTrkDet1Info.clear();
 	stopPPSArmFTrkDet2Info.clear();
 	stopPPSArmBTrkDet1Info.clear();
 	stopPPSArmBTrkDet2Info.clear();
-
-
+	// Gen particle information
+	GenProtonVectorInfo.clear();
+	protonLorentzVector.clear(); 
+       // allGenParticles.clear();
 
 }
+
+//------------------Fill Gen Jet information-------------------------------------------
+void ExclusiveDijetsAnalysisUsingPPS::GenCollections(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
+{
+
+	math::XYZTLorentzVector allGenParticles(0.,0.,0.,0.);
+
+	// Accessing Gen Particles Information
+
+	Handle<reco::GenParticleCollection> genParticle;
+	iEvent.getByLabel("genParticles",genParticle);
+	// const reco::GenParticleCollection& genParticles = *genParticlesCollectionH; 
+
+	int gensize = genParticle->size();
+	int itGen;
+
+	if(genParticle->size()>0){
+		for(itGen=0; itGen < gensize; ++itGen){
+			const reco::GenParticle* genAll = &((*genParticle)[itGen]);
+			if (genAll->status() != 1) continue;
+                        allGenParticles += genAll->p4();
+			if (genAll->pdgId() != 2212) continue;
+			GenProtonVectorInfo.push_back(genAll);
+		}
+
+              GenMxx = allGenParticles.mass();
+
+	}
+
+
+               
+        
+	// Saving One or Two Leading Protons
+	if (GenProtonVectorInfo.size()==1){
+		protonLorentzVector.push_back(GenProtonVectorInfo[0]->p4());
+	}
+
+	if (GenProtonVectorInfo.size()>1){
+		protonLorentzVector.push_back(GenProtonVectorInfo[0]->p4());
+		protonLorentzVector.push_back(GenProtonVectorInfo[1]->p4());
+	}
+
+
+	if (protonLorentzVector.size() > 0 && protonLorentzVector.at(0).pz()>0.){
+
+		xigen_plus = ( 1. - (protonLorentzVector.at(0).pz()/EBeam_) );
+		math::XYZTLorentzVector vec_pi(0.,0.,EBeam_,EBeam_);
+		math::XYZTLorentzVector vec_pf(protonLorentzVector.at(0).px(),protonLorentzVector.at(0).py(),protonLorentzVector.at(0).pz(),protonLorentzVector.at(0).energy());
+		math::XYZTLorentzVector vec_t = (vec_pf - vec_pi);
+
+		tgen_plus = vec_t.mag2(); 
+
+		tgen_plus = abs(tgen_plus);
+
+		if(debug){
+			cout << "--> xi, plus: " << xigen_plus << endl;
+			cout << "--> t, plus (abs) in Z positive : " << tgen_plus << endl;
+			cout << " proton pZ ( proton 1):-> "  << protonLorentzVector.at(0).pz() << endl;
+			cout << " proton py (proton 1):-> "  << protonLorentzVector.at(0).py() << endl;
+			cout << " proton px (proton 1):-> "  << protonLorentzVector.at(0).px() << endl;
+
+		}
+
+
+	} // Gen proton plus side
+
+
+	///////////////////
+	////////Gen protons minus side
+
+	if (protonLorentzVector.size() > 0 && protonLorentzVector.at(1).pz()<0.){
+
+		xigen_minus = ( 1. + (protonLorentzVector.at(1).pz()/EBeam_) );
+		math::XYZTLorentzVector vec_pi(0.,0.,-EBeam_,EBeam_);
+		math::XYZTLorentzVector vec_pf(protonLorentzVector.at(1).px(),protonLorentzVector.at(1).py(),protonLorentzVector.at(1).pz(),protonLorentzVector.at(1).energy());
+		math::XYZTLorentzVector vec_t = (vec_pf - vec_pi);
+
+		tgen_minus = vec_t.mag2();
+
+		tgen_minus = abs(tgen_minus);
+
+		if(debug){
+			cout << "--> xi, minus: " << xigen_minus << endl;
+			cout << "--> t, minus (abs) in Z negative: " << tgen_minus << endl;
+			cout << " proton pZ ( proton 2):-> "  << protonLorentzVector.at(1).pz() << endl;
+			cout << " proton py (proton 2):-> "  << protonLorentzVector.at(1).py() << endl;
+			cout << " proton px (proton 2):-> "  << protonLorentzVector.at(1).px() << endl;
+
+		}
+
+	} // Gen proton minus side
+
+
+	////////////////////////////////////////////////////////////
+
+
+
+	//Gen Jets Information
+	Handle<reco::GenJetCollection> genjets;
+	iEvent.getByLabel(genjets_,genjets);
+	int Genjetsize = genjets->size();
+	int itGenJets;
+
+	if(debug)  cout<< "Gen Jets size: "<< Genjetsize << endl;
+
+	if(genjets->size()>0){
+		for(itGenJets=0; itGenJets < Genjetsize; ++itGenJets){
+			const reco::GenJet* GenjetAll = &((*genjets)[itGenJets]);
+	                       		GenJetsVector.push_back(GenjetAll);
+
+                                       
+		}
+	}
+
+
+
+	// Ordering Jets by pT and Fill Jet Vectors
+	if(GenJetsVector.size()>0){
+
+		const int GenJetsVectorSize = (int) GenJetsVector.size();
+		int *sortGenJetsVector= new int[GenJetsVectorSize];
+		double *genvjets = new double[GenJetsVectorSize];
+
+		for (int i=0; i< GenJetsVectorSize; i++) {
+			genvjets[i] = GenJetsVector[i]->pt();
+		}
+
+		TMath::Sort(GenJetsVectorSize, genvjets, sortGenJetsVector, true);
+
+		for (unsigned int i=0;i<GenJetsVector.size();i++){
+			GenJetsVector_pt.push_back(GenJetsVector[sortGenJetsVector[i]]->pt());
+			GenJetsVector_eta.push_back(GenJetsVector[sortGenJetsVector[i]]->eta());
+			GenJetsVector_phi.push_back(GenJetsVector[sortGenJetsVector[i]]->phi());
+		}
+
+		if (debug) {   
+			cout << "\n--BEGIN--" << endl;
+
+			for (unsigned int i=0;i<GenJetsVector.size();i++){
+				if (debug) {
+					cout << "ORDERED reco::GenJets[" << sortGenJetsVector[i] << "]\t---> " << GenJetsVector[sortGenJetsVector[i]]->print() << endl;}
+				else{
+					cout << "ORDERED reco::GenJets[" << sortGenJetsVector[i] << "]\t---> pT [GeV]: " << GenJetsVector[sortGenJetsVector[i]]->pt() << " | eT [GeV]: " << GenJetsVector[sortGenJetsVector[i]]->et() << " | eta: " << GenJetsVector[sortGenJetsVector[i]]->eta() << " | phi: " << GenJetsVector[sortGenJetsVector[i]]->phi() << " | Vertex: " << GenJetsVector[sortGenJetsVector[i]]->vertex() << " cm" << endl;
+
+				}
+			} // Loop debugger
+		}
+	}
+
+
+
+	//////////Gen Mjj ////////////////////////////////////////////////////
+	if(Genjetsize < 2) return;
+	const reco::GenJet* genJet1 = &(*genjets)[0];
+	const reco::GenJet* genJet2 = &(*genjets)[1];
+
+	if(genJet1&&genJet2){
+
+
+		math::XYZTLorentzVector dijetGenSystem(0.,0.,0.,0.);
+		dijetGenSystem += genJet1->p4();
+		dijetGenSystem += genJet2->p4();
+		double massGen = dijetGenSystem.M();
+		GenMjj=massGen;
+
+
+		if(debug) cout << ">>> Leading Jet pt,eta: " << genJet1->pt() << " , " << genJet1->eta() << endl;
+
+		if(debug) cout << ">>> Second leading Jet pt,eta: " << genJet2->pt() << " , " << genJet2->eta() << endl;
+
+		if(debug) cout << ">>> Dijets Gen Mass " << GenMjj << endl; 
+
+               
+
+	}
+
+
+	////////////////////////////////////////////////////////////
+        
+	if ( (GenMjj > 0.) && (GenMxx > 0.))
+			{
+		GenRjj = GenMjj/GenMxx;
+
+        if(debug) cout << ">>> Gen RJJ " << GenRjj << endl;
+
+			}
+
+
+}//end function
 
 
 // ------------ Fill Vectors, All Handles  ------------
@@ -749,25 +1035,27 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 	if(ppsSpectrum->ArmF.ToFDet.X.size() > 0){
 		xPPSArmFToF = ppsSpectrum->ArmF.ToFDet.X[0];
 		yPPSArmFToF = ppsSpectrum->ArmF.ToFDet.Y[0];
-                   for (unsigned int k=0;k<ppsSpectrum->ArmF.ToFDet.X.size();k++){
-                       xPPSArmFToFInfo.push_back(ppsSpectrum->ArmF.ToFDet.X[k]);
-                       yPPSArmFToFInfo.push_back(ppsSpectrum->ArmF.ToFDet.Y[k]);    
-                          
-                         }
+		for (unsigned int k=0;k<ppsSpectrum->ArmF.ToFDet.X.size();k++){
+			xPPSArmFToFInfo.push_back(ppsSpectrum->ArmF.ToFDet.X[k]);
+			yPPSArmFToFInfo.push_back(ppsSpectrum->ArmF.ToFDet.Y[k]);    
+
+		}
 
 	}
 
 	if(ppsSpectrum->ArmB.ToFDet.X.size() > 0){
 		xPPSArmBToF = ppsSpectrum->ArmB.ToFDet.X[0];
 		yPPSArmBToF = ppsSpectrum->ArmB.ToFDet.Y[0];
-                     for (unsigned int k=0;k<ppsSpectrum->ArmB.ToFDet.X.size();k++){
-                       xPPSArmBToFInfo.push_back(ppsSpectrum->ArmB.ToFDet.X[k]);
-                       yPPSArmBToFInfo.push_back(ppsSpectrum->ArmB.ToFDet.Y[k]);
-                          
-                         }
+		for (unsigned int k=0;k<ppsSpectrum->ArmB.ToFDet.X.size();k++){
+			xPPSArmBToFInfo.push_back(ppsSpectrum->ArmB.ToFDet.X[k]);
+			yPPSArmBToFInfo.push_back(ppsSpectrum->ArmB.ToFDet.Y[k]);
+
+		}
 
 
 	}
+
+
 
 	// ArmF and ArmB, ToF vs ptLeading
 
@@ -805,18 +1093,18 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 	// ArmF and ArmB, HasStopped Info
 	if(ppsSpectrum->ArmF.ToFDet.HasStopped.size() > 0){
 		stopPPSArmFToF = ppsSpectrum->ArmF.ToFDet.HasStopped[0];
-                for (unsigned int k=0;k<ppsSpectrum->ArmF.ToFDet.HasStopped.size();k++){
-                 stopPPSArmFToFInfo.push_back(ppsSpectrum->ArmF.ToFDet.HasStopped[k]);
-              
-               } 
+		for (unsigned int k=0;k<ppsSpectrum->ArmF.ToFDet.HasStopped.size();k++){
+			stopPPSArmFToFInfo.push_back(ppsSpectrum->ArmF.ToFDet.HasStopped[k]);
+
+		} 
 	}
 
 	if(ppsSpectrum->ArmB.ToFDet.HasStopped.size() > 0){
 		stopPPSArmBToF = ppsSpectrum->ArmB.ToFDet.HasStopped[0];
-               for (unsigned int k=0;k<ppsSpectrum->ArmB.ToFDet.HasStopped.size();k++){
-                 stopPPSArmBToFInfo.push_back(ppsSpectrum->ArmB.ToFDet.HasStopped[k]);
+		for (unsigned int k=0;k<ppsSpectrum->ArmB.ToFDet.HasStopped.size();k++){
+			stopPPSArmBToFInfo.push_back(ppsSpectrum->ArmB.ToFDet.HasStopped[k]);
 
-               }
+		}
 
 
 
@@ -824,21 +1112,21 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
 	if(ppsSpectrum->ArmF.TrkDet1.HasStopped.size() > 0){
 		stopPPSArmFTrkDet1 = ppsSpectrum->ArmF.TrkDet1.HasStopped[0];
-                for (unsigned int k=0;k<ppsSpectrum->ArmF.TrkDet1.HasStopped.size();k++){
-                 stopPPSArmFTrkDet1Info.push_back(ppsSpectrum->ArmF.TrkDet1.HasStopped[k]);
+		for (unsigned int k=0;k<ppsSpectrum->ArmF.TrkDet1.HasStopped.size();k++){
+			stopPPSArmFTrkDet1Info.push_back(ppsSpectrum->ArmF.TrkDet1.HasStopped[k]);
 
-               }
- 
+		}
+
 
 
 	}
 
 	if(ppsSpectrum->ArmB.TrkDet1.HasStopped.size() > 0){
 		stopPPSArmBTrkDet1 = ppsSpectrum->ArmB.TrkDet1.HasStopped[0];
-                  for (unsigned int k=0;k<ppsSpectrum->ArmB.TrkDet1.HasStopped.size();k++){
-                 stopPPSArmBTrkDet1Info.push_back(ppsSpectrum->ArmB.TrkDet1.HasStopped[k]);
+		for (unsigned int k=0;k<ppsSpectrum->ArmB.TrkDet1.HasStopped.size();k++){
+			stopPPSArmBTrkDet1Info.push_back(ppsSpectrum->ArmB.TrkDet1.HasStopped[k]);
 
-               }
+		}
 
 
 
@@ -846,30 +1134,30 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
 	if(ppsSpectrum->ArmF.TrkDet2.HasStopped.size() > 0){
 		stopPPSArmFTrkDet2 = ppsSpectrum->ArmF.TrkDet2.HasStopped[0];
-                 for (unsigned int k=0;k<ppsSpectrum->ArmF.TrkDet2.HasStopped.size();k++){
-                 stopPPSArmFTrkDet2Info.push_back(ppsSpectrum->ArmF.TrkDet2.HasStopped[k]);
+		for (unsigned int k=0;k<ppsSpectrum->ArmF.TrkDet2.HasStopped.size();k++){
+			stopPPSArmFTrkDet2Info.push_back(ppsSpectrum->ArmF.TrkDet2.HasStopped[k]);
 
-               }
+		}
 
-              
+
 
 	}
 
 	if(ppsSpectrum->ArmB.TrkDet2.HasStopped.size() > 0){
 		stopPPSArmBTrkDet2 = ppsSpectrum->ArmB.TrkDet2.HasStopped[0];
-                  for (unsigned int k=0;k<ppsSpectrum->ArmB.TrkDet2.HasStopped.size();k++){
-                 stopPPSArmBTrkDet2Info.push_back(ppsSpectrum->ArmB.TrkDet2.HasStopped[k]);
+		for (unsigned int k=0;k<ppsSpectrum->ArmB.TrkDet2.HasStopped.size();k++){
+			stopPPSArmBTrkDet2Info.push_back(ppsSpectrum->ArmB.TrkDet2.HasStopped[k]);
 
-               }
+		}
 
-   
+
 
 
 	}
 
 	// PPS Vertex
 	if(ppsSpectrum->vtxZ.size() > 0){
-		VertexZPPS = ppsSpectrum->vtxZ[0];
+		VertexZPPS = ppsSpectrum->vtxZ[0];//mudar isso para a combinação do ToF position para todos os casos
 	}
 
 	// PPS Mx
@@ -955,17 +1243,43 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 	//
 	// Idea: The choosen Vertex_CMS_z will be find from the minimum | Vertex_PPS_z - Vertex_CMS_z |. 
 	//
+	double c = 299792458.0 ;// m / s
+	//double c = 1.0;
+	double VertexCombineToF_00 = deltaToF_00 * c; // Units: (nano meter) 
+	double VertexCombineToF_0i = deltaToF_0i * c; //Units: (nano meter) 
+	double VertexCombineToF_ii = deltaToF_ii * c; //Units: (nano meter) 
+
+	VertexCombineToF_00 = VertexCombineToF_00 * pow(10,-7); // In cm
+	VertexCombineToF_0i = VertexCombineToF_0i * pow(10,-7); // in cm
+	VertexCombineToF_ii = VertexCombineToF_ii * pow(10,-7); // in cm
+
+
+
 
 	for (unsigned int i=0;i<VertexVector.size();i++){
 
 		VertexCMSVectorX.push_back(VertexVector[i]->x());
 		VertexCMSVectorY.push_back(VertexVector[i]->y());
 		VertexCMSVectorZ.push_back(VertexVector[i]->z());
+		//   fazer loop separados 
+		///(ppsSpectrum->vtxZ.size() retirar             
 
-		if (ppsSpectrum->vtxZ.size() > 0){ 
+		if (ppsSpectrum->vtxZ.size() > 0 && VertexCombineToF_00 != -999 && VertexCombineToF_0i != -999 && VertexCombineToF_ii != -999){ 
 			PPSCMSVertex.push_back(std::pair<double,double>(fabs(ppsSpectrum->vtxZ[0] - VertexVector[i]->z()), VertexVector[i]->z()));
+			PPSCMSVertexToF_00.push_back(std::pair<double,double>(fabs(VertexCombineToF_00 - VertexVector[i]->z()), VertexVector[i]->z()));
+			PPSCMSVertexToF_0i.push_back(std::pair<double,double>(fabs(VertexCombineToF_0i - VertexVector[i]->z()), VertexVector[i]->z()));
+			PPSCMSVertexToF_ii.push_back(std::pair<double,double>(fabs(VertexCombineToF_ii - VertexVector[i]->z()), VertexVector[i]->z()));
+
+			//cout << "VertexCombineToF_00-> " << VertexCombineToF_00 << " Vertex CMS in z axis: " <<  VertexVector[i]->z() << endl;
+
+
 		}else{
 			PPSCMSVertex.clear();
+			PPSCMSVertexToF_00.clear();
+			PPSCMSVertexToF_0i.clear();
+			PPSCMSVertexToF_ii.clear();
+
+
 		}
 	}
 
@@ -1004,6 +1318,103 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 		cout << "--END--\n\n" << endl;
 	}
 
+
+
+	//////////////////
+	// Sorting | Vertex_PPSToF_z - Vertex_CMS_z | for sinal+ sinal
+	stable_sort(PPSCMSVertexToF_00.begin(), PPSCMSVertexToF_00.end());
+
+	if(PPSCMSVertexToF_00.size() > 0){
+		for (unsigned int i=0;i<PPSCMSVertexToF_00.size();i++){
+			if ((PPSCMSVertexToF_00[0].second == VertexVector[i]->z())){
+				indexGoldToF_00 = i;
+			}
+		}
+	}
+	else{
+		indexGoldToF_00 = -999;
+	}
+
+	if (debug){
+		// Selected Vertex CMS/PPS
+		if (indexGoldToF_00 != -999){
+			cout << "\n--GOLDEN VERTEX ASSOCIATION CMS/PPS using Tof combination for signal + signal--" << endl;
+			cout << "Position (x,y,z): " << VertexVector[indexGoldToF_00]->position() << " cm" << endl;
+		}
+		cout << "--END--\n\n" << endl;
+	}
+
+
+
+	/////////////////////////////
+
+
+
+
+	//////////////////
+	// Sorting | Vertex_PPSToF_z - Vertex_CMS_z | for signal + PU
+	stable_sort(PPSCMSVertexToF_0i.begin(), PPSCMSVertexToF_0i.end());
+
+	if(PPSCMSVertexToF_0i.size() > 0){
+		for (unsigned int i=0;i<PPSCMSVertexToF_0i.size();i++){
+			if ((PPSCMSVertexToF_0i[0].second == VertexVector[i]->z())){
+				indexGoldToF_0i = i;
+			}
+		}
+	}
+	else{
+		indexGoldToF_0i = -999;
+	}
+
+	if (debug){
+		// Selected Vertex CMS/PPS
+		if (indexGoldToF_0i != -999){
+			cout << "\n--GOLDEN VERTEX ASSOCIATION CMS/PPS using Tof combination for signal + PU bkg --" << endl;
+			cout << "Position (x,y,z): " << VertexVector[indexGoldToF_0i]->position() << " cm" << endl;
+		}
+		cout << "--END--\n\n" << endl;
+	}
+
+
+
+	/////////////////////////////
+
+
+
+	//////////////////
+	// Sorting | Vertex_PPSToF_z - Vertex_CMS_z | for PU + PU
+	stable_sort(PPSCMSVertexToF_ii.begin(), PPSCMSVertexToF_ii.end());
+
+	if(PPSCMSVertexToF_ii.size() > 0){
+		for (unsigned int i=0;i<PPSCMSVertexToF_ii.size();i++){
+			if ((PPSCMSVertexToF_ii[0].second == VertexVector[i]->z())){
+				indexGoldToF_ii = i;
+			}
+		}
+	}
+	else{
+		indexGoldToF_ii = -999;
+	}
+
+	if (debug){
+		// Selected Vertex CMS/PPS
+		if (indexGoldToF_ii != -999){
+			cout << "\n--GOLDEN VERTEX ASSOCIATION CMS/PPS using Tof combination for PU bkg + PU bkg --" << endl;
+			cout << "Position (x,y,z): " << VertexVector[indexGoldToF_ii]->position() << " cm" << endl;
+		}
+		cout << "--END--\n\n" << endl;
+	}
+
+
+
+	/////////////////////////////
+
+
+
+
+
+
+
 }
 
 // ------------ Sorting Vectors, Filled in FillCollections ------------
@@ -1011,7 +1422,8 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
 
 	// Debug Jets Details
 	bool debugdetails = false;
-
+	// REsoluaçnao 30 ps
+	// resoluçao 2 mm
 
 	// Ordering Jets by pT and Fill Jet Vectors
 	if(JetsVector.size()>0){
@@ -1242,6 +1654,8 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 		for(unsigned int i=0;i<JetsSameVector_pt.size();i++){
 			if (debug) cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) cm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [cm]: " << VertexZPPS << endl;
 
+
+
 			// Fill at least one jet from the same PPS/CMS associated vertex
 			if(fabs(JetsSamePosition[0].Z() - VertexZPPS) < PPSVertexResolution_){
 				CandidatesJets_pt.push_back(JetsSameVector_pt[i]);
@@ -1328,6 +1742,7 @@ void ExclusiveDijetsAnalysisUsingPPS::ResolutionStudies(bool debug){
 void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
 
 	acceptPrint = true;
+	double pt_cut = 100.; //GeV 
 
 	// Fiducial Cuts
 	double xmax = -3.15;
@@ -1347,7 +1762,7 @@ void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
 
 	// Check Some Selectiona
 	if(JetsVector.size()>1){
-		if(JetsVector_pt[0]>50. && JetsVector_pt[1]>50.){
+		if(JetsVector_pt[0]>pt_cut && JetsVector_pt[1]>pt_cut){
 			if(JetsVector_eta[0]>-2. && JetsVector_eta[1]<2.){
 				if(cutXdet1 && cutXdet2 && cutYdet1 && cutYdet2){
 					if(stopTrkDet1 && stopTrkDet2){
