@@ -137,8 +137,8 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		std::vector< std::pair<double,double> >PPSCMSVertexToF_0i;
 		std::vector< std::pair<double,double> >PPSCMSVertexToF_ii;
 
-                 std::vector< std::pair<double,double> >PPSCMSVertexToF_00_0i;
-                 std::vector< std::pair<double,double> >PPSCMSVertexToF_00_0i_ii;
+		std::vector< std::pair<double,double> >PPSCMSVertexToF_00_0i;
+		std::vector< std::pair<double,double> >PPSCMSVertexToF_00_0i_ii;
 
 		std::vector<const reco::PFJet*> PFJets;
 		std::vector<double> MinimumDistance;
@@ -210,14 +210,15 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		std::vector< math::XYZTLorentzVector > protonLorentzVector;
 
 
- 		// Vertex position on Z using ToF
-    		std::vector<double> VertexZPPSToF_00;
-       		std::vector<double> VertexZPPSToF_0i;
-      		std::vector<double> VertexZPPSToF_ii;
-        	std::vector<double> VertexZPPSToF;
-                std::vector<double> VertexZPPSToF_00_0i;
+		// Vertex position on Z using ToF
+		std::vector<double> VertexZPPSToF_00;
+		std::vector<double> VertexZPPSToF_0i;
+		std::vector<double> VertexZPPSToF_ii;
+		std::vector<double> VertexZPPSToF;
+		std::vector<double> VertexZPPSToF_00_0i;
 
-               
+		std::vector<double> DijetsVertexZPPSToF;
+
 
 		// Gen Vertex 
 		double VertexGEN_x;
@@ -275,9 +276,13 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		double deltaToF_0i;
 		double deltaToF_ii;
 
-                double VertexCombineToF_00;
-                double VertexCombineToF_0i;
-                double VertexCombineToF_ii;
+		double ToF_Mx_00;
+		double ToF_Mx_0i;
+		double ToF_Mx_ii;
+
+		double VertexCombineToF_00;
+		double VertexCombineToF_0i;
+		double VertexCombineToF_ii;
 
 		map<int,double> BeamX;
 		map<int,double> BeamY;
@@ -312,7 +317,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 		//const vector<float> DiamondCentralCellW(celws,0.3);
 		//const vector<float> DiamondCentralCellW(celws,celws + sizeof(celws) / sizeof(float));
 		const float DiamondLowerCellW = 10;
-                
+
 
 };
 
@@ -410,17 +415,25 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 
 	eventTree_->Branch("Mpf",&Mpf,"Mpf/D");
 	eventTree_->Branch("Rjj",&Rjj,"Rjj/D");
-      
-        eventTree_->Branch("GenRjj",&Rjj,"GenRjj/D");
+
+	eventTree_->Branch("GenRjj",&Rjj,"GenRjj/D");
 	eventTree_->Branch("CandidatesMjj",&CandidatesMjj,"CandidatesMjj/D");
 	eventTree_->Branch("Mx",&Mx,"Mx/D");
 
-        eventTree_->Branch("GenMxx",&GenMxx,"GenMxx/D");
+	eventTree_->Branch("GenMxx",&GenMxx,"GenMxx/D");
 
 	eventTree_->Branch("FiducialCut",&FiducialCut,"FiducialCut/B");
 	eventTree_->Branch("deltaToF_00",&deltaToF_00,"deltaToF_00/D");
 	eventTree_->Branch("deltaToF_0i",&deltaToF_0i,"deltaToF_0i/D");
 	eventTree_->Branch("deltaToF_ii",&deltaToF_ii,"deltaToF_ii/D");
+
+	eventTree_->Branch("ToF_Mx_00",&ToF_Mx_00,"ToF_Mx_00/D");
+	eventTree_->Branch("ToF_Mx_0i",&ToF_Mx_0i,"ToF_Mx_0i/D");
+	eventTree_->Branch("ToF_Mx_ii",&ToF_Mx_ii,"ToF_Mx_ii/D");
+
+
+
+
 	///vector to storage of information of Arm Forward for signal and PU protons
 	// xi 
 	eventTree_->Branch("xiPPSArmFInfo",&xiPPSArmFInfo);
@@ -463,20 +476,25 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 	eventTree_->Branch("PPSCMSVertexToF_00",&PPSCMSVertexToF_00);
 	eventTree_->Branch("PPSCMSVertexToF_0i",&PPSCMSVertexToF_0i);
 	eventTree_->Branch("PPSCMSVertexToF_ii",&PPSCMSVertexToF_ii);
-        eventTree_->Branch("PPSCMSVertexToF_00_0i",&PPSCMSVertexToF_00_0i);
-        eventTree_->Branch("PPSCMSVertexToF_00_0i_ii",&PPSCMSVertexToF_00_0i_ii);
+	eventTree_->Branch("PPSCMSVertexToF_00_0i",&PPSCMSVertexToF_00_0i);
+	eventTree_->Branch("PPSCMSVertexToF_00_0i_ii",&PPSCMSVertexToF_00_0i_ii);
 
 	// VertexZPPSToF
-        eventTree_->Branch("VertexZPPSToF",&VertexZPPSToF);
-        eventTree_->Branch("VertexZPPSToF_00",&VertexZPPSToF_00);
-        eventTree_->Branch("VertexZPPSToF_0i",&VertexZPPSToF_0i);
-        eventTree_->Branch("VertexZPPSToF_ii",&VertexZPPSToF_ii);
-        eventTree_->Branch("VertexZPPSToF_00_0i",&VertexZPPSToF_00_0i);
+	eventTree_->Branch("VertexZPPSToF",&VertexZPPSToF);
+	eventTree_->Branch("VertexZPPSToF_00",&VertexZPPSToF_00);
+	eventTree_->Branch("VertexZPPSToF_0i",&VertexZPPSToF_0i);
+	eventTree_->Branch("VertexZPPSToF_ii",&VertexZPPSToF_ii);
+	eventTree_->Branch("VertexZPPSToF_00_0i",&VertexZPPSToF_00_0i);
+
+	//
+	//DijetsVertexZPPSToF (Distance between jet vertex and ToF Z vertex
+	eventTree_->Branch("DijetsVertexZPPSToF",&DijetsVertexZPPSToF);
+
 
 
 	// Proton Info      
 	//	eventTree_->Branch("GenProtonVectorInfo",&GenProtonVectorInfo);
-	  eventTree_->Branch("ProtonsP4",&protonLorentzVector);
+	eventTree_->Branch("ProtonsP4",&protonLorentzVector);
 
 
 
@@ -552,9 +570,9 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	PPSCMSVertexToF_00.clear();
 	PPSCMSVertexToF_0i.clear();
 	PPSCMSVertexToF_ii.clear();
-      
-        PPSCMSVertexToF_00_0i.clear();
-        PPSCMSVertexToF_00_0i_ii.clear();
+
+	PPSCMSVertexToF_00_0i.clear();
+	PPSCMSVertexToF_00_0i_ii.clear();
 
 
 	JetsSameVector_pt.clear();
@@ -591,6 +609,10 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	deltaToF_0i = -999.;
 	deltaToF_ii = -999.;
 
+	ToF_Mx_00 =-999.;
+	ToF_Mx_0i =-999.;
+	ToF_Mx_ii =-999.;
+
 
 	JetsSameVertex_x = -999.;
 	JetsSameVertex_y = -999.;
@@ -618,14 +640,14 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	Rjj= -999.;
 	// Mjj gen jet level
 	GenMjj = -999.;
-        GenRjj = -999.;
+	GenRjj = -999.;
 
 	VertexZPPS = -999.;
 	CandidatesMjj = -999.;
 	MaxDistanceZVertex = -999.;
 	MaxDistanceZVertex = -999.;
 	Mx = -999.;
-        GenMxx = -999.;
+	GenMxx = -999.;
 
 	FiducialCut = false;
 
@@ -636,11 +658,11 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 
 	tgen_plus = -999.;
 	tgen_minus = -999.;
-       
-        VertexCombineToF_00 = -999.;
-        VertexCombineToF_0i = -999.;
-        VertexCombineToF_ii = -999.;
- 
+
+	VertexCombineToF_00 = -999.;
+	VertexCombineToF_0i = -999.;
+	VertexCombineToF_ii = -999.;
+
 	// Clearing vectors
 	xiPPSArmFInfo.clear();
 	xiPPSArmBInfo.clear();
@@ -675,14 +697,14 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	// Gen particle information
 	GenProtonVectorInfo.clear();
 	protonLorentzVector.clear(); 
-       // allGenParticles.clear();
+	// allGenParticles.clear();
 
-       VertexZPPSToF_00.clear();
-       VertexZPPSToF_0i.clear();
-       VertexZPPSToF_ii.clear();
-       VertexZPPSToF.clear();
-       VertexZPPSToF_00_0i.clear();
-       
+	VertexZPPSToF_00.clear();
+	VertexZPPSToF_0i.clear();
+	VertexZPPSToF_ii.clear();
+	VertexZPPSToF.clear();
+	VertexZPPSToF_00_0i.clear();
+	DijetsVertexZPPSToF.clear();
 
 }
 
@@ -705,18 +727,18 @@ void ExclusiveDijetsAnalysisUsingPPS::GenCollections(const edm::Event& iEvent, c
 		for(itGen=0; itGen < gensize; ++itGen){
 			const reco::GenParticle* genAll = &((*genParticle)[itGen]);
 			if (genAll->status() != 1) continue;
-                        allGenParticles += genAll->p4();
+			allGenParticles += genAll->p4();
 			if (genAll->pdgId() != 2212) continue;
 			GenProtonVectorInfo.push_back(genAll);
 		}
 
-              GenMxx = allGenParticles.mass();
+		GenMxx = allGenParticles.mass();
 
 	}
 
 
-               
-        
+
+
 	// Saving One or Two Leading Protons
 	if (GenProtonVectorInfo.size()==1){
 		protonLorentzVector.push_back(GenProtonVectorInfo[0]->p4());
@@ -793,9 +815,9 @@ void ExclusiveDijetsAnalysisUsingPPS::GenCollections(const edm::Event& iEvent, c
 	if(genjets->size()>0){
 		for(itGenJets=0; itGenJets < Genjetsize; ++itGenJets){
 			const reco::GenJet* GenjetAll = &((*genjets)[itGenJets]);
-	                       		GenJetsVector.push_back(GenjetAll);
+			GenJetsVector.push_back(GenjetAll);
 
-                                       
+
 		}
 	}
 
@@ -857,20 +879,20 @@ void ExclusiveDijetsAnalysisUsingPPS::GenCollections(const edm::Event& iEvent, c
 
 		if(debug) cout << ">>> Dijets Gen Mass " << GenMjj << endl; 
 
-               
+
 
 	}
 
 
 	////////////////////////////////////////////////////////////
-        
+
 	if ( (GenMjj > 0.) && (GenMxx > 0.))
-			{
+	{
 		GenRjj = GenMjj/GenMxx;
 
-        if(debug) cout << ">>> Gen RJJ " << GenRjj << endl;
+		if(debug) cout << ">>> Gen RJJ " << GenRjj << endl;
 
-			}
+	}
 
 
 }//end function
@@ -1115,14 +1137,20 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 			for (unsigned int iF=0;iF<nhits;iF++){
 				if(iB == 0 && iF == 0 && ppsSpectrum->ArmB.ToF.at(0) != 0 && ppsSpectrum->ArmF.ToF.at(0) != 0 ){ 
 					deltaToF_00 = ppsSpectrum->ArmB.ToF[iB]-ppsSpectrum->ArmF.ToF[iF];  
+					if(ppsSpectrum->ArmB.xi[iB] > 0. && ppsSpectrum->ArmF.xi[iF] > 0.){
+						ToF_Mx_00 = EBeam_*TMath::Sqrt(ppsSpectrum->ArmB.xi[iB]*ppsSpectrum->ArmF.xi[iF]);}
 					continue;
 				}
 				else if((iB==0&&iF > 0 && ppsSpectrum->ArmB.ToF.at(0) != 0 && ppsSpectrum->ArmF.ToF.at(iF) != 0 )|| (iB > 0 && iF == 0 && ppsSpectrum->ArmB.ToF.at(iB) != 0 && ppsSpectrum->ArmF.ToF.at(0) != 0 )) {	  
-					deltaToF_0i=(ppsSpectrum->ArmB.ToF.at(iB)-ppsSpectrum->ArmF.ToF.at(iF)) ; 
+					deltaToF_0i=(ppsSpectrum->ArmB.ToF.at(iB)-ppsSpectrum->ArmF.ToF.at(iF));
+					if(ppsSpectrum->ArmB.xi[iB] > 0. && ppsSpectrum->ArmF.xi[iF] > 0.){
+						ToF_Mx_0i = EBeam_*TMath::Sqrt(ppsSpectrum->ArmB.xi[iB]*ppsSpectrum->ArmF.xi[iF]);} 
 					continue; 
 				}   
 				else if (iB > 0 && iF > 0 && ppsSpectrum->ArmB.ToF.at(iB) != 0 && ppsSpectrum->ArmF.ToF.at(iB) != 0 ) {	  
 					deltaToF_ii=(ppsSpectrum->ArmB.ToF.at(iB)-ppsSpectrum->ArmF.ToF.at(iF));
+					if(ppsSpectrum->ArmB.xi[iB] > 0. && ppsSpectrum->ArmF.xi[iF] > 0.){
+						ToF_Mx_ii = EBeam_*TMath::Sqrt(ppsSpectrum->ArmB.xi[iB]*ppsSpectrum->ArmF.xi[iF]);}
 					continue;
 				}   
 			}
@@ -1199,7 +1227,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 		VertexZPPS = ppsSpectrum->vtxZ[0];//mudar isso para a combinação do ToF position para todos os casos
 	}
 
-         //  cout << "VertexZPPS: " << VertexZPPS << endl; 
+	//  cout << "VertexZPPS: " << VertexZPPS << endl; 
 
 
 
@@ -1297,63 +1325,64 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 	VertexCombineToF_0i = (VertexCombineToF_0i * pow(10,-7))/2.0; // in cm
 	VertexCombineToF_ii = (VertexCombineToF_ii * pow(10,-7))/2.0; // in cm
 
-         if(debug)  cout << "VertexZPPS: " << VertexZPPS << endl;
-         if(debug)  cout << " VertexCombineToF_00: " << VertexCombineToF_00 << endl;
-         if(debug) cout << " VertexCombineToF_0i: " << VertexCombineToF_0i << endl;
-         if (debug) cout << " VertexCombineToF_ii: " << VertexCombineToF_ii << endl;
+	if(debug)  cout << "VertexZPPS: " << VertexZPPS << endl;
+	if(debug)  cout << " VertexCombineToF_00: " << VertexCombineToF_00 << endl;
+	if(debug) cout << " VertexCombineToF_0i: " << VertexCombineToF_0i << endl;
+	if (debug) cout << " VertexCombineToF_ii: " << VertexCombineToF_ii << endl;
 
-       //   VertexZPPSToF_all_Combination 
-       
-         if ( VertexCombineToF_00 != -999){
+	//   VertexZPPSToF_all_Combination 
 
-
-          VertexZPPSToF_00.push_back(VertexCombineToF_00);
-
-	      }
-     
-
-          if ( VertexCombineToF_0i != -999){
+	if ( VertexCombineToF_00 != -999){
 
 
-          VertexZPPSToF_0i.push_back(VertexCombineToF_0i);
+		VertexZPPSToF_00.push_back(VertexCombineToF_00);
 
-              }
-
-
-     
-             if ( VertexCombineToF_ii != -999){
+	}
 
 
-          VertexZPPSToF_ii.push_back(VertexCombineToF_ii);
-
-              }
+	if ( VertexCombineToF_0i != -999){
 
 
-           if(debug) cout << "VertexVector.size(): " << VertexVector.size() << endl;
-           if(debug) cout << " VertexZPPSToF_00.size: " <<  VertexZPPSToF_00.size() << endl;
-           if(debug) cout << " VertexZPPSToF_0i.size: " <<  VertexZPPSToF_0i.size() << endl;
-           if(debug) cout << " VertexZPPSToF_ii.size: " <<  VertexZPPSToF_ii.size() << endl;
+		VertexZPPSToF_0i.push_back(VertexCombineToF_0i);
 
-        
-   
+	}
+
+
+
+	if ( VertexCombineToF_ii != -999){
+
+
+		VertexZPPSToF_ii.push_back(VertexCombineToF_ii);
+
+	}
+
+
+	if(debug) cout << "VertexVector.size(): " << VertexVector.size() << endl;
+	if(debug) cout << " VertexZPPSToF_00.size: " <<  VertexZPPSToF_00.size() << endl;
+	if(debug) cout << " VertexZPPSToF_0i.size: " <<  VertexZPPSToF_0i.size() << endl;
+	if(debug) cout << " VertexZPPSToF_ii.size: " <<  VertexZPPSToF_ii.size() << endl;
+
+
+
 
 	for (unsigned int i=0;i<VertexVector.size();i++){
 
 		VertexCMSVectorX.push_back(VertexVector[i]->x());
 		VertexCMSVectorY.push_back(VertexVector[i]->y());
 		VertexCMSVectorZ.push_back(VertexVector[i]->z());
-		
+
 		///00 (signal+ signal)        
 
-		if (VertexZPPSToF_00.size() > 0){ 
-//			PPSCMSVertex.push_back(std::pair<double,double>(fabs(ppsSpectrum->vtxZ[0] - VertexVector[i]->z()), VertexVector[i]->z()));
-			PPSCMSVertexToF_00.push_back(std::pair<double,double>(fabs(VertexZPPSToF_00[0] - VertexVector[i]->z()), VertexVector[i]->z()));
+		if (VertexZPPSToF_00.size() > 0 && deltaToF_00 !=-999.){ 
+			for (unsigned int j=0;i<PPSCMSVertexToF_00.size();j++){
+				//			PPSCMSVertex.push_back(std::pair<double,double>(fabs(ppsSpectrum->vtxZ[0] - VertexVector[i]->z()), VertexVector[i]->z()));
+				PPSCMSVertexToF_00.push_back(std::pair<double,double>(fabs(VertexZPPSToF_00[j] - VertexVector[i]->z()), VertexVector[i]->z()));
 
-			//cout << "VertexCombineToF_00-> " << VertexCombineToF_00 << " Vertex CMS in z axis: " <<  VertexVector[i]->z() << endl;
-
+				//cout << "VertexCombineToF_00-> " << VertexCombineToF_00 << " Vertex CMS in z axis: " <<  VertexVector[i]->z() << endl;
+			}
 
 		}else{
-//			PPSCMSVertex.clear();
+			//			PPSCMSVertex.clear();
 			PPSCMSVertexToF_00.clear();
 
 
@@ -1362,36 +1391,38 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
 		/// 0i (signal + PU)
 
-		if (VertexZPPSToF_0i.size() > 0){
-                        PPSCMSVertexToF_0i.push_back(std::pair<double,double>(fabs(VertexZPPSToF_0i[0] - VertexVector[i]->z()), VertexVector[i]->z()));
+		if (VertexZPPSToF_0i.size() > 0 && deltaToF_0i !=-999.){
+			for (unsigned int j=0;i<PPSCMSVertexToF_0i.size();j++){ 
+				PPSCMSVertexToF_0i.push_back(std::pair<double,double>(fabs(VertexZPPSToF_0i[j] - VertexVector[i]->z()), VertexVector[i]->z()));
 
-                        //cout << "VertexCombineToF_00-> " << VertexCombineToF_00 << " Vertex CMS in z axis: " <<  VertexVector[i]->z() << endl;
-    
-    
-                }else{
-                        PPSCMSVertexToF_0i.clear();
-    
-    
-                }
+				//cout << "VertexCombineToF_00-> " << VertexCombineToF_00 << " Vertex CMS in z axis: " <<  VertexVector[i]->z() << endl;
+			}
+
+		}else{
+			PPSCMSVertexToF_0i.clear();
+
+
+		}
 
 
 
 
 		// ii (PU + PU)
-  		if (VertexZPPSToF_ii.size() > 0){
-                        PPSCMSVertexToF_ii.push_back(std::pair<double,double>(fabs(VertexZPPSToF_ii[0] - VertexVector[i]->z()), VertexVector[i]->z()));     
+		if (VertexZPPSToF_ii.size() > 0 && deltaToF_ii !=-999.){
+			for (unsigned int j=0;i<PPSCMSVertexToF_ii.size();j++){	
+				PPSCMSVertexToF_ii.push_back(std::pair<double,double>(fabs(VertexZPPSToF_ii[j] - VertexVector[i]->z()), VertexVector[i]->z()));     
 
-                        //cout << "VertexCombineToF_00-> " << VertexCombineToF_00 << " Vertex CMS in z axis: " <<  VertexVector[i]->z() << endl;
-    
-    
-                }else{
-                        PPSCMSVertexToF_ii.clear();
-    
-    
-                }
+				//cout << "VertexCombineToF_00-> " << VertexCombineToF_00 << " Vertex CMS in z axis: " <<  VertexVector[i]->z() << endl;
+			}
+
+		}else{
+			PPSCMSVertexToF_ii.clear();
 
 
-///////////////////////////////////////////////////////
+		}
+
+
+		///////////////////////////////////////////////////////
 
 
 
@@ -1414,7 +1445,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 	}
 
 
-      
+
 
 	// Sorting | Vertex_PPS_z - Vertex_CMS_z |
 	stable_sort(PPSCMSVertex.begin(), PPSCMSVertex.end());
@@ -1530,62 +1561,62 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 
 	/////////////////////////////
 
-  if (debug)cout <<" PPSCMSVertex.size(): " << PPSCMSVertex.size() << endl;
-  if (debug)cout <<" PPSCMSVertexToF_00.size(): " << PPSCMSVertexToF_00.size() << endl;
-  if (debug)cout <<" PPSCMSVertexToF_0i.size(): " << PPSCMSVertexToF_0i.size() << endl;
-  if (debug)cout <<" PPSCMSVertexToF_ii.size(): " << PPSCMSVertexToF_ii.size() << endl;
+	if (debug)cout <<" PPSCMSVertex.size(): " << PPSCMSVertex.size() << endl;
+	if (debug)cout <<" PPSCMSVertexToF_00.size(): " << PPSCMSVertexToF_00.size() << endl;
+	if (debug)cout <<" PPSCMSVertexToF_0i.size(): " << PPSCMSVertexToF_0i.size() << endl;
+	if (debug)cout <<" PPSCMSVertexToF_ii.size(): " << PPSCMSVertexToF_ii.size() << endl;
 
 
- //VertexZPPSToF_all_Combination
-// The main idea should merge of information for 3 cases signal + signal, signal+ PU and PU + PU
-// Using function merge : http://www.cplusplus.com/reference/algorithm/merge/
-//http://stackoverflow.com/questions/20694791/how-to-union-two-sorted-vectors-and-combine-overlapping-elements
+	//VertexZPPSToF_all_Combination
+	// The main idea should merge of information for 3 cases signal + signal, signal+ PU and PU + PU
+	// Using function merge : http://www.cplusplus.com/reference/algorithm/merge/
+	//http://stackoverflow.com/questions/20694791/how-to-union-two-sorted-vectors-and-combine-overlapping-elements
 
-//  First step Merge signal + signal and signal + PU =  PPSCMSVertexToF_00_0i
-// Merge last new vector ( PPSCMSVertexToF_00_0i) + PPSCMSVertexToF_ii = PPSCMSVertexToF_00_0i_ii
+	//  First step Merge signal + signal and signal + PU =  PPSCMSVertexToF_00_0i
+	// Merge last new vector ( PPSCMSVertexToF_00_0i) + PPSCMSVertexToF_ii = PPSCMSVertexToF_00_0i_ii
 
-      // Step1:
+	// Step1:
 
 	merge(begin(PPSCMSVertexToF_00),end(PPSCMSVertexToF_00),begin(PPSCMSVertexToF_0i),end(PPSCMSVertexToF_0i),inserter(PPSCMSVertexToF_00_0i,PPSCMSVertexToF_00_0i.begin()));
 
-  //merge(begin(PPSCMSVertexToF_00),end(PPSCMSVertexToF_00),begin(PPSCMSVertexToF_0i),end(PPSCMSVertexToF_0i),PPSCMSVertexToF_00_0i.begin());    
+	//merge(begin(PPSCMSVertexToF_00),end(PPSCMSVertexToF_00),begin(PPSCMSVertexToF_0i),end(PPSCMSVertexToF_0i),PPSCMSVertexToF_00_0i.begin());    
 
-      stable_sort(PPSCMSVertexToF_00_0i.begin(), PPSCMSVertexToF_00_0i.end());
+	stable_sort(PPSCMSVertexToF_00_0i.begin(), PPSCMSVertexToF_00_0i.end());
 
-    //Step2
+	//Step2
 
-       merge(begin(PPSCMSVertexToF_00_0i),end(PPSCMSVertexToF_00_0i),begin(PPSCMSVertexToF_ii),end(PPSCMSVertexToF_ii),inserter(PPSCMSVertexToF_00_0i_ii,PPSCMSVertexToF_00_0i_ii.begin()));
-
-
- stable_sort(PPSCMSVertexToF_00_0i_ii.begin(), PPSCMSVertexToF_00_0i_ii.end());
+	merge(begin(PPSCMSVertexToF_00_0i),end(PPSCMSVertexToF_00_0i),begin(PPSCMSVertexToF_ii),end(PPSCMSVertexToF_ii),inserter(PPSCMSVertexToF_00_0i_ii,PPSCMSVertexToF_00_0i_ii.begin()));
 
 
-//////////////
-
-// Merging
-
-//VertexZPPSToF_ii
-//VertexZPPSToF_00
-//VertexZPPSToF_0i
-
- // merge 1
-merge(begin(VertexZPPSToF_00),end(VertexZPPSToF_00),begin(VertexZPPSToF_0i),end(VertexZPPSToF_0i),inserter(VertexZPPSToF_00_0i,VertexZPPSToF_00_0i.begin()));
+	stable_sort(PPSCMSVertexToF_00_0i_ii.begin(), PPSCMSVertexToF_00_0i_ii.end());
 
 
+	//////////////
 
-   stable_sort(VertexZPPSToF_00_0i.begin(), VertexZPPSToF_00_0i.end());
+	// Merging
+
+	//VertexZPPSToF_ii
+	//VertexZPPSToF_00
+	//VertexZPPSToF_0i
+
+	// merge 1
+	merge(begin(VertexZPPSToF_00),end(VertexZPPSToF_00),begin(VertexZPPSToF_0i),end(VertexZPPSToF_0i),inserter(VertexZPPSToF_00_0i,VertexZPPSToF_00_0i.begin()));
 
 
 
+	stable_sort(VertexZPPSToF_00_0i.begin(), VertexZPPSToF_00_0i.end());
 
-//merge 2
+
+
+
+	//merge 2
 
 	merge(begin(VertexZPPSToF_00_0i),end(VertexZPPSToF_00_0i),begin(VertexZPPSToF_ii),end(VertexZPPSToF_ii),inserter(VertexZPPSToF,VertexZPPSToF.begin()));
 
 
 
 
-     stable_sort(VertexZPPSToF.begin(), VertexZPPSToF.end());
+	stable_sort(VertexZPPSToF.begin(), VertexZPPSToF.end());
 
 }
 
@@ -1820,48 +1851,58 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 		}
 	}
 
+
+
+	///////////////////
+
 	// Getting at least Dijets Events
 	if(JetsSameVector_pt.size()>1){
 
 		for(unsigned int i=0;i<JetsSameVector_pt.size();i++){
-			//if (debug) cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) cm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [cm]: " << VertexZPPS << endl;
+			for( unsigned int j=0; j < VertexZPPSToF.size(); j++){
+				if (debug) cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) cm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [cm]: " << VertexZPPSToF[j] << endl;
+				// Fill at least one jet from the same PPS/CMS associated vertex
+				DijetsVertexZPPSToF.push_back(fabs(JetsSamePosition[0].Z() - VertexZPPSToF[j]));
+			} //vretex loop
+		}//jetloop
 
-                         for( unsigned int j=0; j < VertexZPPSToF.size(); j++){
-			 if (debug) cout << "Jet["<< i << "], pT [GeV]: " << JetsSameVector_pt[i] << " | Position (x,y,z) cm: " << JetsSamePosition[i].X() << ", " << JetsSamePosition[i].Y() << ", " << JetsSamePosition[i].Z() << " | PPS Vertex z [cm]: " << VertexZPPSToF[j] << endl;
+	}//dijets
+
+	//http://www.cplusplus.com/reference/algorithm/stable_sort/
+	stable_sort(DijetsVertexZPPSToF.begin(), DijetsVertexZPPSToF.end());
 
 
+	// Getting Dijets candidates Events
+	if(JetsSameVector_pt.size()>1){
+
+		for(unsigned int i=0;i<JetsSameVector_pt.size();i++){
 
 
 			// Fill at least one jet from the same PPS/CMS associated vertex
-                         if(fabs(JetsSamePosition[0].Z() - VertexZPPSToF[j]) < PPSVertexResolution_){
-	//		if(fabs(JetsSamePosition[0].Z() - VertexZPPS) < PPSVertexResolution_){
+			if( DijetsVertexZPPSToF[0] < PPSVertexResolution_){
 				CandidatesJets_pt.push_back(JetsSameVector_pt[i]);
 				CandidatesJets_eta.push_back(JetsSameVector_eta[i]);
 				CandidatesJets_phi.push_back(JetsSameVector_phi[i]);
 				CandidatesJets_p4.push_back(JetsSameVector_p4[i]);
 			}
-		}//Vextex looop
-        } //Jetloop
+		} //Jetloop
 
 
 
-                    for(unsigned int j=0; j < VertexZPPSToF.size(); j++){
 
 		// Counter Number of Associated Events CMS/PPS Vertex
-                 if(fabs(JetsSamePosition[0].Z() - VertexZPPSToF[j]) < PPSVertexResolution_){
-	//	if(fabs(JetsSamePosition[0].Z() - VertexZPPS) < PPSVertexResolution_){
+		if(DijetsVertexZPPSToF[0] < PPSVertexResolution_){
 			++nAssociated;
 		}
 
 		for(int i=0; i < size_resol; i++){
 			// Resolution Studies
-			if(fabs(JetsSamePosition[0].Z() - VertexZPPS) < resol[i]){
+			if(DijetsVertexZPPSToF[0] < resol[i]){    	
 				counter[i]++;
 			}
-      		}
-       }//Vertex loop     
+		}
 
-}//dijJet selection
+	}//dijJet selection
 
 
 
