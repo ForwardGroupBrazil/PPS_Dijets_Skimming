@@ -186,6 +186,7 @@ process.ak5JetTracksAssociatorAtVertex = cms.EDProducer("JetTracksAssociatorAtVe
 # EDAnalyzer Parameters
 process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
                                MakePlots = cms.bool(True),
+			       GenJets = cms.InputTag('ak5GenJets'),#Gen information	
                                JetTag = cms.InputTag(jettag),
 ParticleFlowTag = cms.InputTag("particleFlow"),
                                VertexTag = cms.InputTag("goodOfflinePrimaryVertices"),
