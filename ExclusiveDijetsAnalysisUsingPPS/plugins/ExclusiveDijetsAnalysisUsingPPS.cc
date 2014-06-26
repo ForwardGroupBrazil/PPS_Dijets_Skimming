@@ -222,13 +222,13 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 
 		std::vector<double> DijetsVertexZPPSToF;
 
-                std::vector<double> ToF_celID_00_F;
-                std::vector<double> ToF_celID_0i_F;
-                std::vector<double> ToF_celID_ii_F;
+                std::vector<int> ToF_celID_00_F;
+                std::vector<int> ToF_celID_0i_F;
+                std::vector<int> ToF_celID_ii_F;
 
-                 std::vector<double> ToF_celID_00_B;
-                std::vector<double> ToF_celID_0i_B;
-                std::vector<double> ToF_celID_ii_B; 
+                std::vector<int> ToF_celID_00_B;
+                std::vector<int> ToF_celID_0i_B;
+                std::vector<int> ToF_celID_ii_B; 
 
 		// Gen Vertex 
 		double VertexGEN_x;
