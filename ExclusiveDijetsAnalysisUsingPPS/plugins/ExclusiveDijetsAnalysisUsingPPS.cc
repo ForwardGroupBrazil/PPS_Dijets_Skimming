@@ -332,7 +332,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 
 ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet& iConfig):
 	MakePlots_(iConfig.getParameter<bool>("MakePlots")),
-	runWithWeightGen_(iConfig.getUntrackedParameter<bool>("RunWithWeightGen")),
+	runWithWeightGen_(iConfig.getParameter<bool>("RunWithWeightGen")),
 	genjets_(iConfig.getParameter<edm::InputTag>("GenJets")), 
 	jetTag_(iConfig.getParameter<edm::InputTag>("JetTag")),
 	particleFlowTag_(iConfig.getParameter<edm::InputTag>("ParticleFlowTag")),
