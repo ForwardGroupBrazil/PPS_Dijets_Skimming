@@ -108,6 +108,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 
 		bool MakePlots_;
 		bool runWithWeightGen_;
+		bool  pps_Flag_;
 		edm::InputTag  genjets_ ;
 		edm::InputTag jetTag_;
 		edm::InputTag particleFlowTag_;
@@ -221,6 +222,14 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 
 		std::vector<double> DijetsVertexZPPSToF;
 
+                std::vector<double> ToF_celID_00_F;
+                std::vector<double> ToF_celID_0i_F;
+                std::vector<double> ToF_celID_ii_F;
+
+                 std::vector<double> ToF_celID_00_B;
+                std::vector<double> ToF_celID_0i_B;
+                std::vector<double> ToF_celID_ii_B; 
+
 		// Gen Vertex 
 		double VertexGEN_x;
 		double VertexGEN_y;
@@ -333,6 +342,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet& iConfig):
 	MakePlots_(iConfig.getParameter<bool>("MakePlots")),
 	runWithWeightGen_(iConfig.getParameter<bool>("RunWithWeightGen")),
+	pps_Flag_(iConfig.getParameter<bool>("PPS_Flag")), 
 	genjets_(iConfig.getParameter<edm::InputTag>("GenJets")), 
 	jetTag_(iConfig.getParameter<edm::InputTag>("JetTag")),
 	particleFlowTag_(iConfig.getParameter<edm::InputTag>("ParticleFlowTag")),
@@ -501,7 +511,16 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 	//	eventTree_->Branch("GenProtonVectorInfo",&GenProtonVectorInfo);
 	eventTree_->Branch("ProtonsP4",&protonLorentzVector);
 
-        
+        // Cel id
+          eventTree_->Branch("ToF_celID_00_F",&ToF_celID_00_F);        
+          eventTree_->Branch("ToF_celID_0i_F",&ToF_celID_0i_F);
+	  eventTree_->Branch("ToF_celID_ii_F",&ToF_celID_ii_F);	
+
+	  eventTree_->Branch("ToF_celID_00_B",&ToF_celID_00_B);
+          eventTree_->Branch("ToF_celID_0i_B",&ToF_celID_0i_B);
+          eventTree_->Branch("ToF_celID_ii_B",&ToF_celID_ii_B);
+		
+
 
 	if(MakePlots_){
 		TFileDirectory Dir = fs->mkdir("Info");
@@ -707,6 +726,17 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 	VertexZPPSToF_00_0i.clear();
 	DijetsVertexZPPSToF.clear();
       
+
+	ToF_celID_00_F.clear();
+        ToF_celID_0i_F.clear();
+ 	ToF_celID_ii_F.clear();
+  
+	
+        ToF_celID_00_B.clear();
+        ToF_celID_0i_B.clear();
+        ToF_celID_ii_B.clear();
+
+ 
         Pthat = -1.;
         GeneratorWeight = -1.;
         runNumber = -1;
@@ -1083,14 +1113,21 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 				int cellIdF = ToFCellId(ppsSpectrum->ArmF.ToFDet.X.at(iF),ppsSpectrum->ArmF.ToFDet.Y.at(iF));
 				if(cellIdB==0 || cellIdF==0) continue;  
 				if(iB == 0 && iF == 0 && ppsSpectrum->ArmB.ToF.at(0) != 0 && ppsSpectrum->ArmF.ToF.at(0) != 0 ){ 
+					 ToF_celID_00_F.push_back(cellIdF);
+					 ToF_celID_00_B.push_back(cellIdB); 	
+
 					deltaToF_00 = (ppsSpectrum->ArmF.ToF.at(iF)) - (ppsSpectrum->ArmB.ToF.at(iB));  
 					tof30ps_deltaToF_00 = (ppsSim->ArmF.ToF.at(iF)+smearToF1) - (ppsSim->ArmB.ToF.at(iB)+smearToF2);  
 					if(ppsSpectrum->ArmB.xi[iB] > 0. && ppsSpectrum->ArmF.xi[iF] > 0.){ 
 						ToF_Mx_00 = EBeam_*TMath::Sqrt(ppsSpectrum->ArmB.xi[iB]*ppsSpectrum->ArmF.xi[iF]);
+					
+
 					}
 					continue;
 				}
 				if((iB==0&&iF > 0 && ppsSpectrum->ArmB.ToF.at(0) != 0 && ppsSpectrum->ArmF.ToF.at(iF) != 0 )|| (iB > 0 && iF == 0 && ppsSpectrum->ArmB.ToF.at(iB) != 0 && ppsSpectrum->ArmF.ToF.at(0) != 0 )) {	  
+					 ToF_celID_0i_F.push_back(cellIdF);
+                                         ToF_celID_0i_B.push_back(cellIdB); 
 					deltaToF_0i=(ppsSpectrum->ArmF.ToF.at(iF)-ppsSpectrum->ArmB.ToF.at(iB)) ; 
 					tof30ps_deltaToF_0i = (ppsSim->ArmF.ToF.at(iF)+smearToF1) - (ppsSim->ArmB.ToF.at(iB)+smearToF2);  
 					if(ppsSpectrum->ArmB.xi[iB] > 0. && ppsSpectrum->ArmF.xi[iF] > 0.){
@@ -1100,6 +1137,8 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
 					continue; 
 				}   
 				if (iB > 0 && iF > 0 && ppsSpectrum->ArmB.ToF.at(iB) != 0 && ppsSpectrum->ArmF.ToF.at(iF) != 0 ) {	  
+					 ToF_celID_ii_F.push_back(cellIdF);
+                                         ToF_celID_ii_B.push_back(cellIdB); 	
 					deltaToF_ii=(ppsSpectrum->ArmF.ToF.at(iF)-ppsSpectrum->ArmB.ToF.at(iB));
 					tof30ps_deltaToF_ii = (ppsSim->ArmF.ToF.at(iF)+smearToF1) - (ppsSim->ArmB.ToF.at(iB)+smearToF2);  
 					if(ppsSpectrum->ArmB.xi[iB] > 0. && ppsSpectrum->ArmF.xi[iF] > 0.){
