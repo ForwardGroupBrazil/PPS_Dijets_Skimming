@@ -33,6 +33,9 @@ options.parseArguments()
 MC_OOT_PU = False
 MC_NO_OOT_NO_PU = False
 MC_NO_OOT_PU = False
+MC_NO_OOT_PU_DPE = False
+MC_NO_OOT_PU_SDPPU = False
+MC_NO_OOT_PU_SDMPU = False
 jettag = "ak5PFJetsCHS" #ak5PFJets or ak5PFJetsCHS
 
 
@@ -64,6 +67,27 @@ elif options.Run == "MC_NO_OOT_PU":
   MC_NO_OOT_PU = True
   fileout = 'ttreeCEPdijetsNoOOT_PU.root'
 
+elif options.Run == "MC_NO_OOT_PU_DPE":
+  print("")
+  print(">> Running: MC No OOT and Pile Up")
+  print("")
+  MC_NO_OOT_PU_DPE = True
+  fileout = 'ttreeCEPdijetsDPENoOOT_PU.root'
+
+elif options.Run == "MC_NO_OOT_PU_SDPPU":
+  print("")
+  print(">> Running: MC No OOT and Pile Up")
+  print("")
+  MC_NO_OOT_PU_SDPPU = True
+  fileout = 'ttreeCEPdijetsSDPPUNoOOT_PU_2.root'
+
+elif options.Run == "MC_NO_OOT_PU_SDMPU":
+  print("")
+  print(">> Running: MC No OOT and Pile Up")
+  print("")
+  MC_NO_OOT_PU_SDMPU = True
+  fileout = 'ttreeCEPdijetsSDMPUNoOOT_PU_2.root'
+
 else:
   print("")
   print("")
@@ -76,7 +100,9 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-
+process.options = cms.untracked.PSet(
+        SkipEvent = cms.untracked.vstring('ProductNotFound')
+        )
 # Openning files with or without Pile-Up
 if MC_OOT_PU:
    process.source = cms.Source("PoolSource",
@@ -110,61 +136,118 @@ if MC_NO_OOT_NO_PU:
           'file:/storage2/polme/GG/GG_noOOT_noPU_9b.root'
       )
    )
+if MC_NO_OOT_PU_SDMPU:
+   process.source = cms.Source("PoolSource",
+      duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
+      fileNames = cms.untracked.vstring(
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_1.root',
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_2.root',
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_3.root',
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_4.root',
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_5.root',
+          #'file:/storage2/polme/PWSD/PomwigSDM_PU_6.root',
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_7.root',
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_8.root',
+          'file:/storage2/polme/PWSD/PomwigSDM_PU_10.root'
+      )
+   )
 
+if MC_NO_OOT_PU_SDPPU:
+   process.source = cms.Source("PoolSource",
+      duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
+      fileNames = cms.untracked.vstring(
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_1.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_2.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_3.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_4.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_5.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_6.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_7.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_8.root',
+          'file:/storage2/polme/PWSD/PomwigSDP_PU_10.root'
+    )
+ )
+
+
+if MC_NO_OOT_PU_DPE:
+   process.source = cms.Source("PoolSource",
+      duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
+      fileNames = cms.untracked.vstring(
+          'file:/storage2/polme/PW/Pomwig_PU_1.root',
+          'file:/storage2/polme/PW/Pomwig_PU_2.root',
+          'file:/storage2/polme/PW/Pomwig_PU_3.root',
+          'file:/storage2/polme/PW/Pomwig_PU_4.root',
+          'file:/storage2/polme/PW/Pomwig_PU_5.root',
+          'file:/storage2/polme/PW/Pomwig_PU_6.root',
+          'file:/storage2/polme/PW/Pomwig_PU_7.root',
+          'file:/storage2/polme/PW/Pomwig_PU_8.root',
+          'file:/storage2/polme/PW/Pomwig_PU_10.root',
+          'file:/storage2/polme/PW/Pomwig_PU_11.root',
+          'file:/storage2/polme/PW/Pomwig_PU_12.root',
+          'file:/storage2/polme/PW/Pomwig_PU_13.root',
+          'file:/storage2/polme/PW/Pomwig_PU_14.root',
+          'file:/storage2/polme/PW/Pomwig_PU_15.root',
+          'file:/storage2/polme/PW/Pomwig_PU_16.root',
+          'file:/storage2/polme/PW/Pomwig_PU_17.root',
+          'file:/storage2/polme/PW/Pomwig_PU_18.root',
+          'file:/storage2/polme/PW/Pomwig_PU_19.root',
+          'file:/storage2/polme/PW/Pomwig_PU_20.root'
+          )
+         )
 if MC_NO_OOT_PU:
    process.source = cms.Source("PoolSource",
       duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
       fileNames = cms.untracked.vstring(
-          'file:/storage2/polme/GG/GG_noOOT_new_1.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_2.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_3.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_4.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_5.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_6.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_7.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_8.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_9.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_10.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_11.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_12.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_13.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_14.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_15.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_16.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_17.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_18.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_19.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_20.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_21.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_22.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_23.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_24.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_25.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_26.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_27.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_28.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_29.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_30.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_31.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_32.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_33.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_34.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_35.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_36.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_37.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_38.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_39.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_40.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_41.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_42.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_43.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_44.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_45.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_46.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_47.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_48.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_49.root',
-          'file:/storage2/polme/GG/GG_noOOT_new_50.root'
+          'file:/storage2/polme/GG/GG_PU_1.root',
+          'file:/storage2/polme/GG/GG_PU_2.root',
+          'file:/storage2/polme/GG/GG_PU_3.root',
+          'file:/storage2/polme/GG/GG_PU_4.root',
+          'file:/storage2/polme/GG/GG_PU_5.root',
+          'file:/storage2/polme/GG/GG_PU_6.root',
+          'file:/storage2/polme/GG/GG_PU_7.root',
+          'file:/storage2/polme/GG/GG_PU_8.root',
+          'file:/storage2/polme/GG/GG_PU_9.root',
+          'file:/storage2/polme/GG/GG_PU_10.root',
+          'file:/storage2/polme/GG/GG_PU_11.root',
+          'file:/storage2/polme/GG/GG_PU_12.root',
+          'file:/storage2/polme/GG/GG_PU_13.root',
+          'file:/storage2/polme/GG/GG_PU_14.root',
+          'file:/storage2/polme/GG/GG_PU_15.root',
+          'file:/storage2/polme/GG/GG_PU_16.root',
+          'file:/storage2/polme/GG/GG_PU_17.root',
+          'file:/storage2/polme/GG/GG_PU_18.root',
+          'file:/storage2/polme/GG/GG_PU_19.root',
+          'file:/storage2/polme/GG/GG_PU_20.root',
+          'file:/storage2/polme/GG/GG_PU_21.root',
+          'file:/storage2/polme/GG/GG_PU_22.root',
+          'file:/storage2/polme/GG/GG_PU_23.root',
+          'file:/storage2/polme/GG/GG_PU_24.root',
+          'file:/storage2/polme/GG/GG_PU_25.root',
+          'file:/storage2/polme/GG/GG_PU_26.root',
+          'file:/storage2/polme/GG/GG_PU_27.root',
+          'file:/storage2/polme/GG/GG_PU_28.root',
+          'file:/storage2/polme/GG/GG_PU_29.root',
+          'file:/storage2/polme/GG/GG_PU_30.root',
+          'file:/storage2/polme/GG/GG_PU_31.root',
+          'file:/storage2/polme/GG/GG_PU_32.root',
+          'file:/storage2/polme/GG/GG_PU_33.root',
+          'file:/storage2/polme/GG/GG_PU_34.root',
+          'file:/storage2/polme/GG/GG_PU_35.root',
+          'file:/storage2/polme/GG/GG_PU_36.root',
+          'file:/storage2/polme/GG/GG_PU_37.root',
+          'file:/storage2/polme/GG/GG_PU_38.root',
+          'file:/storage2/polme/GG/GG_PU_39.root',
+          'file:/storage2/polme/GG/GG_PU_40.root',
+          'file:/storage2/polme/GG/GG_PU_41.root',
+          'file:/storage2/polme/GG/GG_PU_42.root',
+          'file:/storage2/polme/GG/GG_PU_43.root',
+          'file:/storage2/polme/GG/GG_PU_44.root',
+          'file:/storage2/polme/GG/GG_PU_45.root',
+          'file:/storage2/polme/GG/GG_PU_46.root',
+          'file:/storage2/polme/GG/GG_PU_47.root',
+          'file:/storage2/polme/GG/GG_PU_48.root',
+          'file:/storage2/polme/GG/GG_PU_49.root',
+          'file:/storage2/polme/GG/GG_PU_50.root'
       )
    )
 
@@ -184,14 +267,15 @@ process.ak5JetTracksAssociatorAtVertex = cms.EDProducer("JetTracksAssociatorAtVe
                                                        )
 
 # EDAnalyzer Parameters
-process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPS',
-                               MakePlots = cms.bool(True),  
-			       RunWithWeightGen = cms.bool(False),
-			       GenJets = cms.InputTag('ak5GenJets'),#Gen information	
+process.demo = cms.EDAnalyzer('ExclusiveDijetsAnalysisUsingPPSv14',
+                               MakePlots = cms.bool(True),
+                               PPS_Flag = cms.bool(False),
+                               RunWithWeightGen = cms.bool(False),
+            			       GenJets = cms.InputTag('ak5GenJets'),#Gen information
                                JetTag = cms.InputTag(jettag),
-ParticleFlowTag = cms.InputTag("particleFlow"),
+                               ParticleFlowTag = cms.InputTag("particleFlow"),
                                VertexTag = cms.InputTag("goodOfflinePrimaryVertices"),
-PPSTag = cms.untracked.string("PPSReco"),
+                               PPSTag = cms.untracked.string("PPSReco"),
                                pTPFThresholdCharged = cms.double(0.1),
                                energyPFThresholdBar = cms.double(1.5),
                                energyPFThresholdEnd = cms.double(3.5),
