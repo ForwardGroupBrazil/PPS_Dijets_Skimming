@@ -37,6 +37,7 @@ MC_NO_OOT_PU = False
 MC_NO_OOT_PU_DPE = False
 MC_NO_OOT_PU_SDPPU = False
 MC_NO_OOT_PU_SDMPU = False
+MC_NO_OOT_PU_SDPOMWIG = False
 jettag = "ak5PFJetsCHS" #ak5PFJets or ak5PFJetsCHS
 
 
