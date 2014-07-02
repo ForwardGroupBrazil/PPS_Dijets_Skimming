@@ -87,7 +87,14 @@ elif options.Run == "MC_NO_OOT_PU_SDMPU":
   print(">> Running: MC No OOT and Pile Up")
   print("")
   MC_NO_OOT_PU_SDMPU = True
-  fileout = 'ttreeCEPdijetsSDMPUNoOOT_PU_2.root'
+  fileout = 'ttreeCEPdijetsSDMPUNoOOT_PU.root'
+  
+elif options.Run == "MC_NO_OOT_PU_SDPOMWIG":
+  print("")
+  print(">> Running: MC No OOT and Pile Up")
+  print("")
+  MC_NO_OOT_PU_SDMPU = True
+  fileout = 'ttreeCEPdijetsSDPOMWIGNoOOT_PU.root'
 
 else:
   print("")
@@ -102,7 +109,8 @@ process = cms.Process("Demo")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.options = cms.untracked.PSet(
-        SkipEvent = cms.untracked.vstring('ProductNotFound')
+        SkipEvent = cms.untracked.vstring('ProductNotFound'),
+        wantSummary = cms.untracked.bool(True)
         )
 # Openning files with or without Pile-Up
 if MC_OOT_PU:
@@ -168,6 +176,34 @@ if MC_NO_OOT_PU_SDPPU:
           'file:/storage2/polme/PWSD/PomwigSDP_PU_10.root'
     )
  )
+
+
+if MC_NO_OOT_PU_POMWIGSD:
+ process.source = cms.Source("PoolSource",
+  duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
+  fileNames = cms.untracked.vstring(
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_1.root',
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_2.root',
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_3.root',
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_4.root',
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_5.root',
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_7.root',
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_8.root',
+                #'file:/storage2/polme/PWSD/PomwigSDM_PU_9.root',
+                'file:/storage2/polme/PWSD/PomwigSDM_PU_10.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_1.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_2.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_3.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_4.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_5.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_6.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_7.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_8.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_9.root',
+                'file:/storage2/polme/PWSD/PomwigSDP_PU_10.root'
+  )
+ )
+
 
 
 if MC_NO_OOT_PU_DPE:
