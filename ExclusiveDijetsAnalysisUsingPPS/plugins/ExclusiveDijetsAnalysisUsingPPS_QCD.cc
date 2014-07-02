@@ -1742,7 +1742,7 @@ if (pps_Flag_){
   if(debug)  cout << " VertexCombineToF_00: " << VertexCombineToF_00 << endl;
   if(debug) cout << " VertexCombineToF_0i: " << VertexCombineToF_0i << endl;
   if (debug) cout << " VertexCombineToF_ii: " << VertexCombineToF_ii << endl;
-/*
+
   //   VertexZPPSToF_all_Combination 
   if ( VertexCombineToF_00 != -999){
     VertexZPPSToF_00.push_back(VertexCombineToF_00);
@@ -1753,7 +1753,7 @@ if (pps_Flag_){
   if ( VertexCombineToF_ii != -999){
     VertexZPPSToF_ii.push_back(VertexCombineToF_ii);
   }
-*/
+
    if (deltaToF_00 != -999.) VertexZPPSToF_00.push_back(VertexCombineToF_00);
     if (deltaToF_0i != -999.) VertexZPPSToF_0i.push_back(VertexCombineToF_0i);
     if (deltaToF_ii != -999.) VertexZPPSToF_ii.push_back(VertexCombineToF_ii);
