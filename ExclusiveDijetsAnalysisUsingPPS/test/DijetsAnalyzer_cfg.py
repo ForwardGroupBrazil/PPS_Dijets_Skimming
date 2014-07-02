@@ -37,7 +37,7 @@ MC_NO_OOT_PU = False
 MC_NO_OOT_PU_DPE = False
 MC_NO_OOT_PU_SDPPU = False
 MC_NO_OOT_PU_SDMPU = False
-MC_NO_OOT_PU_SDPOMWIG = False
+MC_NO_OOT_PU_POMWIGSD = False
 jettag = "ak5PFJetsCHS" #ak5PFJets or ak5PFJetsCHS
 
 
@@ -78,21 +78,21 @@ elif options.Run == "MC_NO_OOT_PU_DPE":
 
 elif options.Run == "MC_NO_OOT_PU_SDPPU":
   print("")
-  print(">> Running: MC No OOT and Pile Up")
+  print(">> Running: MC No OOT and Pile Up SD+ POMWIG")
   print("")
   MC_NO_OOT_PU_SDPPU = True
   fileout = 'ttreeCEPdijetsSDPPUNoOOT_PU_2.root'
 
 elif options.Run == "MC_NO_OOT_PU_SDMPU":
   print("")
-  print(">> Running: MC No OOT and Pile Up")
+  print(">> Running: MC No OOT and Pile Up SD- POMWIG")
   print("")
   MC_NO_OOT_PU_SDMPU = True
   fileout = 'ttreeCEPdijetsSDMPUNoOOT_PU.root'
   
 elif options.Run == "MC_NO_OOT_PU_SDPOMWIG":
   print("")
-  print(">> Running: MC No OOT and Pile Up")
+  print(">> Running: MC No OOT and Pile Up SD+ && SD- POMWIG")
   print("")
   MC_NO_OOT_PU_SDMPU = True
   fileout = 'ttreeCEPdijetsSDPOMWIGNoOOT_PU.root'
@@ -179,7 +179,7 @@ if MC_NO_OOT_PU_SDPPU:
  )
 
 
-if MC_NO_OOT_PU_POMWIGSD:
+if MC_NO_OOT_PU_SDPOMWIG:
  process.source = cms.Source("PoolSource",
   duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
   fileNames = cms.untracked.vstring(
