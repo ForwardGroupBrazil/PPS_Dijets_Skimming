@@ -1,7 +1,7 @@
 // -*- C++ -*-
 //
-// Package:    ExclusiveDijetsAnalysisUsingPPS
-// Class:      ExclusiveDijetsAnalysisUsingPPS
+// Package:    ExclusiveDijetsAnalysisUsingPPS_QCD
+// Class:      ExclusiveDijetsAnalysisUsingPPS_QCD
 //
 // Authors: PPS CEP Brazilian Group
 //
@@ -86,10 +86,10 @@ using namespace HepMC;
 // class declaration
 //
 
-class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
+class ExclusiveDijetsAnalysisUsingPPS_QCD : public edm::EDAnalyzer {
   public:
-    explicit ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet&);
-    ~ExclusiveDijetsAnalysisUsingPPS();
+    explicit ExclusiveDijetsAnalysisUsingPPS_QCD(const edm::ParameterSet&);
+    ~ExclusiveDijetsAnalysisUsingPPS_QCD();
 
   private:
     virtual void beginJob() override;
@@ -456,7 +456,7 @@ class ExclusiveDijetsAnalysisUsingPPS : public edm::EDAnalyzer {
 // constructors and destructor
 //
 
-ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::ParameterSet& iConfig):
+ExclusiveDijetsAnalysisUsingPPS_QCD::ExclusiveDijetsAnalysisUsingPPS_QCD(const edm::ParameterSet& iConfig):
   MakePlots_(iConfig.getParameter<bool>("MakePlots")),
   runWithWeightGen_(iConfig.getParameter<bool>("RunWithWeightGen")),
   pps_Flag_(iConfig.getParameter<bool>("PPS_Flag")), 
@@ -757,19 +757,19 @@ ExclusiveDijetsAnalysisUsingPPS::ExclusiveDijetsAnalysisUsingPPS(const edm::Para
 
 }
 
-ExclusiveDijetsAnalysisUsingPPS::~ExclusiveDijetsAnalysisUsingPPS()
+ExclusiveDijetsAnalysisUsingPPS_QCD::~ExclusiveDijetsAnalysisUsingPPS_QCD()
 {
 }
 
 
 // ------------ method called once each job just before starting event loop  ------------
-void ExclusiveDijetsAnalysisUsingPPS::beginJob()
+void ExclusiveDijetsAnalysisUsingPPS_QCD::beginJob()
 {
   cout << "\n--- P P S    C E P   A N A L Y Z E R---\n" << endl;
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void ExclusiveDijetsAnalysisUsingPPS::endJob()
+void ExclusiveDijetsAnalysisUsingPPS_QCD::endJob()
 {
 
   bool debug = false;
@@ -793,7 +793,7 @@ void ExclusiveDijetsAnalysisUsingPPS::endJob()
 }
 
 // ------------ method called for each event  ------------
-void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+void ExclusiveDijetsAnalysisUsingPPS_QCD::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
 
   Init(); // Clean Variables
   MCGenInfo(iEvent, iSetup, false);
@@ -809,7 +809,7 @@ void ExclusiveDijetsAnalysisUsingPPS::analyze(const edm::Event& iEvent, const ed
 
 // ------------ Clean Variables --------------
 
-void ExclusiveDijetsAnalysisUsingPPS::Init(){
+void ExclusiveDijetsAnalysisUsingPPS_QCD::Init(){
 
 
   stopPPSArmFToFInfo_00.clear();
@@ -920,12 +920,6 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 
   xiPPSArmFInfo_ii.clear();
   xiPPSArmBInfo_ii.clear();
-
-
-
-
-
-
 
 
   GenJetsVector.clear();
@@ -1090,7 +1084,7 @@ void ExclusiveDijetsAnalysisUsingPPS::Init(){
 }
 //----------------------------MC Gen Ifnfo---------------------
 // MCGenInfo
-void ExclusiveDijetsAnalysisUsingPPS::MCGenInfo(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
+void ExclusiveDijetsAnalysisUsingPPS_QCD::MCGenInfo(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
 {
   unsigned int eventNumber_ = iEvent.id().event();
   unsigned int runNumber_ = iEvent.id().run();
@@ -1113,7 +1107,7 @@ void ExclusiveDijetsAnalysisUsingPPS::MCGenInfo(const edm::Event& iEvent, const 
 
 
 //------------------Fill Gen Jet information-------------------------------------------
-void ExclusiveDijetsAnalysisUsingPPS::GenCollections(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
+void ExclusiveDijetsAnalysisUsingPPS_QCD::GenCollections(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
 {
 
   math::XYZTLorentzVector allGenParticles(0.,0.,0.,0.);
@@ -1144,7 +1138,7 @@ void ExclusiveDijetsAnalysisUsingPPS::GenCollections(const edm::Event& iEvent, c
   if (GenProtonVectorInfo.size()>1){
     protonLorentzVector.push_back(GenProtonVectorInfo[0]->p4());
     protonLorentzVector.push_back(GenProtonVectorInfo[1]->p4());
-  }
+  }  
 /*
   if (protonLorentzVector.size() > 0 && protonLorentzVector.at(0).pz()>0.){
 
@@ -1263,7 +1257,7 @@ void ExclusiveDijetsAnalysisUsingPPS::GenCollections(const edm::Event& iEvent, c
 
 
 // ------------ Fill Vectors, All Handles  ------------
-void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
+void ExclusiveDijetsAnalysisUsingPPS_QCD::FillCollections(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug)
 {
   // Debug Detailed Information, each loop
   bool debugdetails = true;
@@ -1344,6 +1338,8 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
     }
     Mpf = allCands.M();
   }
+
+if (pps_Flag_){
 
   // Fill PPS Spectrometer
   Handle<PPSSpectrometer> ppsSpectrum;
@@ -1746,12 +1742,10 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   if(debug)  cout << " VertexCombineToF_00: " << VertexCombineToF_00 << endl;
   if(debug) cout << " VertexCombineToF_0i: " << VertexCombineToF_0i << endl;
   if (debug) cout << " VertexCombineToF_ii: " << VertexCombineToF_ii << endl;
-
-  //   VertexZPPSToF_all_Combination 
 /*
+  //   VertexZPPSToF_all_Combination 
   if ( VertexCombineToF_00 != -999){
- 
-   VertexZPPSToF_00.push_back(VertexCombineToF_00);
+    VertexZPPSToF_00.push_back(VertexCombineToF_00);
   }
   if ( VertexCombineToF_0i != -999){
     VertexZPPSToF_0i.push_back(VertexCombineToF_0i);
@@ -1760,7 +1754,7 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
     VertexZPPSToF_ii.push_back(VertexCombineToF_ii);
   }
 */
-    if (deltaToF_00 != -999.) VertexZPPSToF_00.push_back(VertexCombineToF_00);
+   if (deltaToF_00 != -999.) VertexZPPSToF_00.push_back(VertexCombineToF_00);
     if (deltaToF_0i != -999.) VertexZPPSToF_0i.push_back(VertexCombineToF_0i);
     if (deltaToF_ii != -999.) VertexZPPSToF_ii.push_back(VertexCombineToF_ii);
 
@@ -1942,11 +1936,11 @@ void ExclusiveDijetsAnalysisUsingPPS::FillCollections(const edm::Event& iEvent, 
   //merge 2
   merge(begin(VertexZPPSToF_00_0i),end(VertexZPPSToF_00_0i),begin(VertexZPPSToF_ii),end(VertexZPPSToF_ii),inserter(VertexZPPSToF,VertexZPPSToF.begin()));
   stable_sort(VertexZPPSToF.begin(), VertexZPPSToF.end());
-
+ } //end pps flag
 }
 
 // ------------ Sorting Vectors, Filled in FillCollections ------------
-void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
+void ExclusiveDijetsAnalysisUsingPPS_QCD::SortingObjects(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
 
   // Debug Jets Details
   bool debugdetails = false;
@@ -2011,7 +2005,7 @@ void ExclusiveDijetsAnalysisUsingPPS::SortingObjects(const edm::Event& iEvent, c
 
 }
 
-void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
+void ExclusiveDijetsAnalysisUsingPPS_QCD::AssociateJetsWithVertex(const edm::Event& iEvent, const edm::EventSetup& iSetup, bool debug){
 
   bool debugdeep = false;
   if (indexGold != -999){
@@ -2019,11 +2013,12 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
       cout << "\n--GOLDEN VERTEX ASSOCIATION CMS/PPS--" << endl;
       cout << "Position (x,y,z): " << VertexVector[indexGold]->position() << " cm" << endl;
     }
-    GoldenVertexZ = VertexVector[indexGold]->z();
+
+ if(pps_Flag_) GoldenVertexZ = VertexVector[indexGold]->z();
   }
   for (unsigned int i=0;i<TracksVector.size();i++){
     if(indexGold != -999){
-      MinimumDistance.push_back(fabs(VertexVector[indexGold]->z() - TracksVector[i]->innerPosition().Z()));
+    if(pps_Flag_) MinimumDistance.push_back(fabs(VertexVector[indexGold]->z() - TracksVector[i]->innerPosition().Z()));
     }
   }
   const int minVectorSize = (int) MinimumDistance.size();
@@ -2196,10 +2191,15 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
 
   //http://www.cplusplus.com/reference/algorithm/stable_sort/
   stable_sort(DijetsVertexZPPSToF.begin(), DijetsVertexZPPSToF.end());
-  // Getting Dijets candidates Events
+/*
+if(pps_Flag_!=true){ // open flag
+
+
+// Getting Dijets candidates Events
   if(JetsSameVector_pt.size()>1){
     for(unsigned int i=0;i<JetsSameVector_pt.size();i++){
       // Fill at least one jet from the same PPS/CMS associated vertex
+  
       if( DijetsVertexZPPSToF[0] < PPSVertexResolution_){
 	CandidatesJets_pt.push_back(JetsSameVector_pt[i]);
 	CandidatesJets_eta.push_back(JetsSameVector_eta[i]);
@@ -2218,6 +2218,8 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
       }
     }
   }//dijJet selection
+} // close flag
+
   // Fill Mjj leading dijets from candidate CMS/PPS associated vertex
   if(CandidatesJets_p4.size()>1){
     math::XYZTLorentzVector dijetSystemCand(0.,0.,0.,0.);
@@ -2225,8 +2227,9 @@ void ExclusiveDijetsAnalysisUsingPPS::AssociateJetsWithVertex(const edm::Event& 
     dijetSystemCand += CandidatesJets_p4[1];
     CandidatesMjj = dijetSystemCand.M();
   }
-}
-void ExclusiveDijetsAnalysisUsingPPS::ResolutionStudies(bool debug){
+*/
+}  // end function
+void ExclusiveDijetsAnalysisUsingPPS_QCD::ResolutionStudies(bool debug){
   // Put Vertex in order of Z.
   const int VertexVectorSize = (int) VertexVector.size();
   int *sortVertexVector= new int[VertexVectorSize];
@@ -2264,7 +2267,7 @@ void ExclusiveDijetsAnalysisUsingPPS::ResolutionStudies(bool debug){
   }
 }
 
-void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
+void ExclusiveDijetsAnalysisUsingPPS_QCD::PPSSelection(){
 
   acceptPrint = true;
   double pt_cut = 100.; //GeV 
@@ -2309,7 +2312,7 @@ void ExclusiveDijetsAnalysisUsingPPS::PPSSelection(){
   }
 }
 
-void ExclusiveDijetsAnalysisUsingPPS::setToFGeometry(std::string geotype)
+void ExclusiveDijetsAnalysisUsingPPS_QCD::setToFGeometry(std::string geotype)
 {
   ToFCellRow.clear();
   ToFCellColumn.clear();
@@ -2323,7 +2326,7 @@ void ExclusiveDijetsAnalysisUsingPPS::setToFGeometry(std::string geotype)
     std::cout << "Unknown ToF geometry." << std::endl;
   }
 }
-void ExclusiveDijetsAnalysisUsingPPS::setQuartic()
+void ExclusiveDijetsAnalysisUsingPPS_QCD::setQuartic()
 {
   // the vertical positions starts from the negative(bottom) to the positive(top) corner
   for(int i=0;i<NYCell;i++) {
@@ -2339,7 +2342,7 @@ void ExclusiveDijetsAnalysisUsingPPS::setQuartic()
     ToFCellColumn.push_back(pair<double,double>(x1,x2));
   }
 }
-int ExclusiveDijetsAnalysisUsingPPS::ToFCellId(double x, double y)
+int ExclusiveDijetsAnalysisUsingPPS_QCD::ToFCellId(double x, double y)
 {
   int y_idx,x_idx;
   // first, get the row number
@@ -2370,7 +2373,7 @@ int ExclusiveDijetsAnalysisUsingPPS::ToFCellId(double x, double y)
   x_idx=i+1-start_idx;
   return 100*y_idx+x_idx;
 }
-void ExclusiveDijetsAnalysisUsingPPS::setToFParameters(std::string geo,double xpos)
+void ExclusiveDijetsAnalysisUsingPPS_QCD::setToFParameters(std::string geo,double xpos)
 {
   //     if (!fInitialized) setDataFormat();
   if (BeamX.count(1)==0||BeamX.count(2)==0||BeamX.count(3)==0||
@@ -2384,7 +2387,7 @@ void ExclusiveDijetsAnalysisUsingPPS::setToFParameters(std::string geo,double xp
   ToFXPosSigma=xpos;
   setToFGeometry(geo);
 }
-void ExclusiveDijetsAnalysisUsingPPS::setBeamParameters(int pos, double x,double y,double rms_x,double rms_y)
+void ExclusiveDijetsAnalysisUsingPPS_QCD::setBeamParameters(int pos, double x,double y,double rms_x,double rms_y)
 {
   if (pos<1||pos>3) {
     cout << "ERROR: unknown detector position index: " << pos << endl;
@@ -2398,4 +2401,4 @@ void ExclusiveDijetsAnalysisUsingPPS::setBeamParameters(int pos, double x,double
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(ExclusiveDijetsAnalysisUsingPPS);
+DEFINE_FWK_MODULE(ExclusiveDijetsAnalysisUsingPPS_QCD);
