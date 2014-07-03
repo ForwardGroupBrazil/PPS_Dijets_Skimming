@@ -743,10 +743,11 @@ ExclusiveDijetsAnalysisUsingPPS_QCD::ExclusiveDijetsAnalysisUsingPPS_QCD(const e
   eventTree_->Branch("stopPPSArmBTrkDet1Info_ii",&stopPPSArmBTrkDet1Info_ii);
   eventTree_->Branch("stopPPSArmBTrkDet2Info_ii",&stopPPSArmBTrkDet2Info_ii);
 
+// vertex vector
+//  eventTree_->Branch("VertexVector",&VertexVector);
 
-
-
-
+   eventTree_->Branch("eventNumber",&eventNumber,"eventNumber/I");
+   eventTree_->Branch("runNumber",&runNumber,"runNumber/I");
 
 
 
