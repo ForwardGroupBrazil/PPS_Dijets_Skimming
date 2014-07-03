@@ -47,7 +47,7 @@ if options.Run == "MC_NO_OOT_PU_QCD":
  print(">> Running: MC No OOT and Pile Up - QCD")
  print("")
  MC_NO_OOT_PU_QCD = True
- fileout = 'test_ttree_pomwigsdplus_NoOOT_PU.root'
+ fileout = 'test_ttree_QCD_w_t_PPSInfo.root'
 
 elif options.Run == "MC_NO_OOT_PU_POMWIG":
  print("")
@@ -73,6 +73,7 @@ else:
 # CMSSW Default Configuration
 process = cms.Process("Demo")
 
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
